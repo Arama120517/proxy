@@ -1,0 +1,45 @@
+name: 自动更新
+
+on:
+  schedule:
+    - cron: "45 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+
+      - name: 登录 GitHub CLI
+        run: echo ${{ secrets.GH_TOKEN }} | gh auth login --with-token
+
+      - name: 安装依赖
+        run: uv sync --no-dev
+
+      - name: 运行程序
+        run: uv run --no-dev -m src
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+
+      - name: 删除相同标签的发行版
+        continue-on-error: true
+        run: |
+          gh release delete --yes --cleanup-tag result
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 创建发行版
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: result
+          name: "更新服务器节点"
+          files: result.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
