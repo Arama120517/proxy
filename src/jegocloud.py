@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import subprocess
@@ -6,14 +5,14 @@ from uuid import uuid4
 
 from dns.rdatatype import TXT
 from dns.resolver import Resolver
-from requests import HTTPError, Response, Session
-from rich import print_json
-from ua_generator import generate
+from requests import RequestException, Response
 
 from src import ProxyServerGenerator
 
 
 class JegoCloud(ProxyServerGenerator):
+    """https://jegocloud.com/"""
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -23,11 +22,6 @@ class JegoCloud(ProxyServerGenerator):
 
         self.resolver: Resolver = Resolver()
         self.resolver.nameservers = ['8.8.8.8', '8.8.4.4']
-
-        self.session: Session = Session()
-        self.session.headers.update({
-            'User-Agent': generate().text,
-        })
 
         urls: list[str] = []
         for api_url in [
@@ -42,11 +36,11 @@ class JegoCloud(ProxyServerGenerator):
 
         for url in urls:
             try:
-                response: Response = self.session.post(
+                response: Response = self.post(
                     f'{url}/chrome/session', data={'token': self.token}, timeout=5
                 )
                 response.raise_for_status()
-            except HTTPError:
+            except RequestException:
                 self.logger.exception(f'API不可用: {url}')
                 urls.remove(url)
                 continue
@@ -54,13 +48,13 @@ class JegoCloud(ProxyServerGenerator):
         self.api_url: str = f'{urls[0]}/chrome'
 
     def generate(self) -> list[dict]:
-        response: Response = self.session.get(f'{self.api_url}/popup', params={'token': self.token})
+        response: Response = self.get(f'{self.api_url}/popup', params={'token': self.token})
         response.raise_for_status()
         response: dict = response.json()
 
         if not response['session']['proxy_settings'].get('pacScript'):
             self.logger.warning('Token失效, 尝试重新获取Token')
-            response: Response = self.session.post(
+            response: Response = self.post(
                 f'{self.api_url}/options/login',
                 data=f'username={self.user_name}&password={self.password}',
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
@@ -101,4 +95,8 @@ class JegoCloud(ProxyServerGenerator):
 
 
 if __name__ == '__main__':
+    import json
+
+    from rich import print_json
+
     print_json(json.dumps(JegoCloud().generate()), indent=4, ensure_ascii=False)

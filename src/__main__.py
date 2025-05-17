@@ -5,15 +5,16 @@ from pathlib import Path
 from rich.logging import RichHandler
 
 from src import ProxyServerGenerator
-from src.freeclassnode import FreeClassNode
+from src.daily_updates import AirPortNodes, FreeClassNode
 from src.jegocloud import JegoCloud
+from src.v2ray_news import V2RayNews
 
 logging.root.addHandler(RichHandler(rich_tracebacks=True))
 logging.root.setLevel(logging.INFO)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-modules: list[ProxyServerGenerator] = [JegoCloud(), FreeClassNode()]
+modules: list[ProxyServerGenerator] = [JegoCloud(), FreeClassNode(), AirPortNodes(), V2RayNews()]
 
 CURRENT_DIR_PATH: Path = Path().cwd()
 SRC_DIR_PATH: Path = CURRENT_DIR_PATH / 'src'
