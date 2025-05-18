@@ -7,14 +7,13 @@ from rich.logging import RichHandler
 from src import BaseSource
 from src.free_clash_node import FreeClashNodeSource
 from src.jegocloud import JegoCloudSource
-from src.v2ray_news import V2RayNews
 
 logging.root.addHandler(RichHandler(rich_tracebacks=True))
 logging.root.setLevel(logging.INFO)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-modules: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource(), V2RayNews()]
+modules: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
 
 CURRENT_DIR_PATH: Path = Path().cwd()
 SRC_DIR_PATH: Path = CURRENT_DIR_PATH / 'src'
