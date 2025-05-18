@@ -1,12 +1,11 @@
-import re
 from datetime import datetime, timedelta, timezone
 
-from requests import RequestException, Response
+from requests import RequestException
 
-from src import ProxyServerGenerator
+from src import BaseSource
 
 
-class V2RayNews(ProxyServerGenerator):
+class V2RayNews(BaseSource):
     """https://v2raynews.com"""
 
     def generate(self) -> list[dict]:
@@ -15,26 +14,11 @@ class V2RayNews(ProxyServerGenerator):
         for i in range(7):
             time: datetime = today - timedelta(days=rollback_days)
             try:
-                response: Response = self.get(
-                    time.strftime('https://v2raynews.com/free-nodes-%Y%#m%#d'),
+                return self.from_clash_source_get_proxy_servers(
+                    self.from_website_get_source_urls(
+                        time.strftime('https://v2raynews.com/free-nodes-%Y%#m%#d'), 'yaml'
+                    )[0]
                 )
-                response.raise_for_status()
-
-                be_found_url = re.search(
-                    r'https://dlconf\.clashapps\.cc/yaml/[a-zA-Z0-9\-]+\.yaml', response.text
-                )
-                if not be_found_url:
-                    raise RuntimeError('正则表达式没有匹配到任何链接')
-
-                response = self.get(f'https://clash2sfa.xmdhs.com/sub?sub={be_found_url.group()}')
-                response.raise_for_status()
-
-                servers: list[dict] = []
-                for outbound in response.json()['outbounds']:
-                    if 'server' not in outbound:
-                        continue
-                    servers.append(outbound)
-                return servers
             except RequestException:
                 self.logger.warning(
                     f'获取节点失败, 尝试获取{time.strftime("%Y-%m-%d")}的节点'.format(time=time)

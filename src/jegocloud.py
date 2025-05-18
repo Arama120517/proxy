@@ -7,17 +7,17 @@ from dns.rdatatype import TXT
 from dns.resolver import Resolver
 from requests import RequestException, Response
 
-from src import ProxyServerGenerator
+from src import BaseSource
 
 
-class JegoCloud(ProxyServerGenerator):
-    """https://jegocloud.com/"""
+class JegoCloudSource(BaseSource):
+    """https://jegocloud.com"""
 
     def __init__(self) -> None:
         super().__init__()
 
         self.token: str = os.environ.get('TOKEN')
-        self.user_name: str = os.environ.get('USERNAME')
+        self.username: str = os.environ.get('USERNAME')
         self.password: str = os.environ.get('PASSWORD')
 
         self.resolver: Resolver = Resolver()
@@ -56,7 +56,7 @@ class JegoCloud(ProxyServerGenerator):
             self.logger.warning('Token失效, 尝试重新获取Token')
             response: Response = self.post(
                 f'{self.api_url}/options/login',
-                data=f'username={self.user_name}&password={self.password}',
+                data={'username': self.username, 'password': self.password},
                 headers={'Content-Type': 'application/x-www-form-urlencoded'},
             )
             response.raise_for_status()
@@ -99,4 +99,4 @@ if __name__ == '__main__':
 
     from rich import print_json
 
-    print_json(json.dumps(JegoCloud().generate()), indent=4, ensure_ascii=False)
+    print_json(json.dumps(JegoCloudSource().generate()), indent=4, ensure_ascii=False)

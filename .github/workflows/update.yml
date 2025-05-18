@@ -39,8 +39,6 @@ jobs:
       - name: 创建发行版
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: result
           name: "更新服务器节点"
+          tag_name: result
           files: result.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
