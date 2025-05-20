@@ -1,10 +1,11 @@
 import logging
-import re
 from abc import ABC, abstractmethod
+from typing import Any, NoReturn
 
-from bs4 import BeautifulSoup
-from requests import Response, Session
+from requests import Session
 from ua_generator import generate
+
+OutBounds = list[dict[str, Any]]
 
 
 class BaseSource(ABC, Session):
@@ -15,29 +16,29 @@ class BaseSource(ABC, Session):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.headers.update({'User-Agent': generate().text})
 
+    def test(self) -> NoReturn:
+        """测试是否能正常获取"""
+
+        from sys import exit
+
+        from rich import print_json
+
+        try:
+            servers = self.get_outbounds()
+            print_json(data=servers, indent=4, ensure_ascii=False)
+        except Exception:
+            self.logger.exception('获取失败')
+
+        exit(0)
+
     @abstractmethod
-    def generate(self) -> list[dict]: ...
+    def get_outbounds(self) -> OutBounds: ...
 
     @staticmethod
-    def from_full_config_get_proxy_servers(config: dict) -> list[dict]:
-        servers: list[dict] = []
+    def extract_proxy_servers(config: dict) -> OutBounds:
+        servers: OutBounds = []
         for outbound in config['outbounds']:
             if 'server' not in outbound:
                 continue
             servers.append(outbound)
         return servers
-
-    def from_clash_source_get_proxy_servers(self, url: str) -> list[dict]:
-        response = self.get(f'https://clash2sfa.xmdhs.com/sub?sub={url}')
-        response.raise_for_status()
-        return self.from_full_config_get_proxy_servers(response.json())
-
-    def from_website_get_source_urls(self, url: str, file_suffix: str = 'json') -> list[str]:
-        response: Response = self.get(url)
-        response.raise_for_status()
-
-        be_found_url = re.findall(rf'https?://[^\s<>"\']+?\.{file_suffix}', response.text)
-        if not be_found_url:
-            raise RuntimeError('正则表达式没有匹配到任何链接')
-
-        return be_found_url

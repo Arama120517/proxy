@@ -7,7 +7,7 @@ from dns.rdatatype import TXT
 from dns.resolver import Resolver
 from requests import RequestException, Response
 
-from src import BaseSource
+from src import BaseSource, OutBounds
 
 
 class JegoCloudSource(BaseSource):
@@ -41,13 +41,13 @@ class JegoCloudSource(BaseSource):
                 )
                 response.raise_for_status()
             except RequestException:
-                self.logger.exception(f'API不可用: {url}')
+                self.logger.warning(f'API不可用: {url}')
                 urls.remove(url)
                 continue
 
         self.api_url: str = f'{urls[0]}/chrome'
 
-    def generate(self) -> list[dict]:
+    def get_outbounds(self) -> OutBounds:
         response: Response = self.get(f'{self.api_url}/popup', params={'token': self.token})
         response.raise_for_status()
         response: dict = response.json()
@@ -76,11 +76,11 @@ class JegoCloudSource(BaseSource):
         if not data:
             raise RuntimeError('正则表达式没有匹配到任何节点')
 
-        outbounds: list[dict] = []
+        outbounds: OutBounds = []
         for index, (host, port) in enumerate(data, start=1):
             outbounds.append({
                 'type': 'http',
-                'tag': f'jegoclound-{index}',
+                'tag': f'jegocloud_{index}',
                 'server': host,
                 'server_port': int(port),
                 'tls': {
@@ -95,8 +95,4 @@ class JegoCloudSource(BaseSource):
 
 
 if __name__ == '__main__':
-    import json
-
-    from rich import print_json
-
-    print_json(json.dumps(JegoCloudSource().generate()), indent=4, ensure_ascii=False)
+    JegoCloudSource().test()

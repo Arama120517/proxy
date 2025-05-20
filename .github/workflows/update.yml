@@ -31,10 +31,7 @@ jobs:
 
       - name: 删除相同标签的发行版
         continue-on-error: true
-        run: |
-          gh release delete --yes --cleanup-tag result
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete --yes --cleanup-tag result
 
       - name: 创建发行版
         uses: softprops/action-gh-release@v2
