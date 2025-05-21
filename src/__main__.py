@@ -11,7 +11,7 @@ from src.jegocloud import JegoCloudSource
 logging.root.addHandler(RichHandler(rich_tracebacks=True))
 logging.root.setLevel(logging.INFO)
 
-MODULES: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
+SOURCES: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
 
 CURRENT_DIR_PATH: Path = Path().cwd()
 SRC_DIR_PATH: Path = CURRENT_DIR_PATH / 'src'
@@ -22,13 +22,13 @@ def main() -> None:
         template: dict = json.loads(f.read())
 
     servers: list[str] = []
-    for module in MODULES:
-        for outbound in module.get_outbounds():
+    for source in SOURCES:
+        for outbound in source.get_outbounds():
             # 防止重复
             if outbound['server'] in servers:
                 continue
 
-            tag: str = outbound['tag']
+            tag: str = f'{source.__class__.__name__}_{outbound["tag"]}'
             template['outbounds'][0]['outbounds'].append(tag)
             template['outbounds'][1]['outbounds'].append(tag)
             template['outbounds'].insert(-3, outbound)
