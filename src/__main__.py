@@ -28,7 +28,7 @@ def main() -> None:
             if outbound['server'] in servers:
                 continue
 
-            tag: str = f'{source.__class__.__name__}_{outbound["tag"]}'
+            tag: str = outbound['tag']
             template['outbounds'][0]['outbounds'].append(tag)
             template['outbounds'][1]['outbounds'].append(tag)
             template['outbounds'].insert(-3, outbound)

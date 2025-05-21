@@ -27,10 +27,12 @@ class FreeClashNodeSource(BaseSource):
         if not be_found_urls:
             raise RuntimeError('正则表达式没有匹配到任何链接')
 
-        for url in be_found_urls:
+        for index, url in enumerate(be_found_urls):
             response: Response = self.get(f'https://clash2sfa.xmdhs.com/sub?sub={url}')
             response.raise_for_status()
-            outbounds += self.extract_proxy_servers(response.json())
+            for outbound in self.extract_proxy_servers(response.json()):
+                outbound['tag'] = f'{index}_{outbound["tag"]}'
+                outbounds += outbound
         return outbounds
 
 
