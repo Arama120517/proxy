@@ -32,7 +32,7 @@ class FreeClashNodeSource(BaseSource):
             response.raise_for_status()
             for outbound in self.extract_proxy_servers(response.json()):
                 outbound['tag'] = f'{index}_{outbound["tag"]}'
-                outbounds += outbound
+                outbounds.append(outbound)
         return outbounds
 
 
