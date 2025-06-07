@@ -16,9 +16,9 @@ class JegoCloudSource(BaseSource):
     def __init__(self) -> None:
         super().__init__()
 
-        self.token: str = os.environ.get('TOKEN')
-        self.username: str = os.environ.get('USERNAME')
-        self.password: str = os.environ.get('PASSWORD')
+        self.token: str = os.environ.get('JEGOCLOUD_TOKEN')
+        self.username: str = os.environ.get('JEGOCLOUD_USERNAME')
+        self.password: str = os.environ.get('JEGOCLOUD_PASSWORD')
 
         self.resolver: Resolver = Resolver()
         self.resolver.nameservers = ['8.8.8.8', '8.8.4.4']
@@ -63,7 +63,7 @@ class JegoCloudSource(BaseSource):
             response: dict = response.json()
             token: str = response['session']['token']
             subprocess.check_call(
-                ['gh', 'secret', 'set', 'token', '--app', 'actions', '--body', token],
+                ['gh', 'secret', 'set', 'JEGOCLOUD_TOKEN', '--app', 'actions', '--body', token],
             )
 
         data: set[dict] = set(
@@ -95,4 +95,4 @@ class JegoCloudSource(BaseSource):
 
 
 if __name__ == '__main__':
-    JegoCloudSource().test()
+    JegoCloudSource().main()

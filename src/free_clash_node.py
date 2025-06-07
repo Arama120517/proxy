@@ -37,4 +37,4 @@ class FreeClashNodeSource(BaseSource):
 
 
 if __name__ == '__main__':
-    FreeClashNodeSource().test()
+    FreeClashNodeSource().main()

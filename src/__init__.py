@@ -3,7 +3,16 @@ from abc import ABC, abstractmethod
 from typing import Any, NoReturn
 
 from requests import Session
+from rich.logging import RichHandler
 from ua_generator import generate
+
+# 测试用
+try:
+    import dotenv
+
+    dotenv.load_dotenv()
+except (ModuleNotFoundError, IOError):
+    pass
 
 OutBounds = list[dict[str, Any]]
 
@@ -13,11 +22,15 @@ class BaseSource(ABC, Session):
 
     def __init__(self):
         super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
+
         self.headers.update({'User-Agent': generate().text})
 
-    def test(self) -> NoReturn:
-        """测试是否能正常获取"""
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.level = logging.INFO
+        self.logger.handlers = [RichHandler(rich_tracebacks=True)]
+
+    def main(self) -> NoReturn:
+        """运行程序"""
 
         from sys import exit
 

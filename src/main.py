@@ -1,15 +1,9 @@
 import json
-import logging
 from pathlib import Path
-
-from rich.logging import RichHandler
 
 from src import BaseSource
 from src.free_clash_node import FreeClashNodeSource
 from src.jegocloud import JegoCloudSource
-
-logging.root.addHandler(RichHandler(rich_tracebacks=True))
-logging.root.setLevel(logging.INFO)
 
 SOURCES: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
 

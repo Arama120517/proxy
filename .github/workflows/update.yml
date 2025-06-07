@@ -19,15 +19,12 @@ jobs:
       - name: 登录 GitHub CLI
         run: echo ${{ secrets.GH_TOKEN }} | gh auth login --with-token
 
-      - name: 安装依赖
-        run: uv sync --no-dev
-
       - name: 运行程序
-        run: uv run --no-dev -m src
+        run: uv run --no-dev -m src.main
         env:
-          TOKEN: ${{ secrets.TOKEN }}
-          USERNAME: ${{ secrets.USERNAME }}
-          PASSWORD: ${{ secrets.PASSWORD }}
+          JEGOCLOUD_TOKEN: ${{ secrets.JEGOCLOUD_TOKEN }}
+          JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
+          JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
 
       - name: 删除相同标签的发行版
         continue-on-error: true
