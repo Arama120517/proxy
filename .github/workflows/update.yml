@@ -33,6 +33,7 @@ jobs:
       - name: 创建发行版
         uses: softprops/action-gh-release@v2
         with:
+          draft: false
           name: "更新服务器节点"
           tag_name: result
           files: result.json
