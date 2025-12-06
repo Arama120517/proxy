@@ -60,19 +60,14 @@ with Reader('Country.mmdb') as geo_reader:
                 template['outbounds'].insert(-3, outbound)
 
                 servers[outbound['type']].append(outbound['server'])
-                logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
         except NoAnswer:
             continue
         except Exception:
             logging.exception('获取节点失败')
-            continue
+            exit(1)
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
-    f.write(f"""## 结果
-
-- **节点总数**: {len(template['outbounds']) - 5}
-
-| 类型 | 节点数量 |
+    f.write("""| 类型 | 节点数量 |
 | ---- | -------- |
 """)
     for tag, servers_list in servers.items():
