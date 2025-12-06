@@ -1,9 +1,9 @@
 import json
 import logging
-from ipaddress import ip_address
+from ipaddress import IPv6Address, ip_address
 from pathlib import Path
 
-from dns.resolver import Resolver
+from dns.resolver import NoAnswer, Resolver
 from geoip2.database import Reader
 
 from proxy import BaseSource
@@ -32,33 +32,40 @@ with open(SRC_DIR_PATH / 'template.json', 'r', encoding='utf-8') as f:
 servers: dict[str, list[str]] = {}
 with Reader('Country.mmdb') as geo_reader:
     resolver = Resolver()
-
     for source in SOURCES:
-        for outbound in source.get_outbounds():
-            type_servers = servers.setdefault(outbound['type'], [])
-            # 防止重复
-            if outbound['server'] in type_servers:
-                continue
-            ip = outbound['server']
+        try:
+            for outbound in source.get_outbounds():
+                type_servers = servers.setdefault(outbound['type'], [])
+                # 防止重复
+                if outbound['server'] in type_servers:
+                    continue
+                ip = outbound['server']
 
-            try:
-                ip_address(ip)
-            except ValueError:
-                ip = str(resolver.resolve(ip, 'A')[0])
+                try:
+                    # 不处理 IPv6 地址
+                    if isinstance(ip_address(ip), IPv6Address):
+                        continue
+                except ValueError:
+                    ip = str(resolver.resolve(ip, 'A')[0])
 
-            response = geo_reader.country(ip)
+                response = geo_reader.country(ip)
 
-            country_code = response.country.iso_code
-            flag_emoji = country_code_to_flag_emoji(country_code)
+                country_code = response.country.iso_code
+                flag_emoji = country_code_to_flag_emoji(country_code)
 
-            tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
-            outbound['tag'] = tag
-            template['outbounds'][0]['outbounds'].append(tag)
-            template['outbounds'][1]['outbounds'].append(tag)
-            template['outbounds'].insert(-3, outbound)
+                tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
+                outbound['tag'] = tag
+                template['outbounds'][0]['outbounds'].append(tag)
+                template['outbounds'][1]['outbounds'].append(tag)
+                template['outbounds'].insert(-3, outbound)
 
-            servers[outbound['type']].append(outbound['server'])
-            logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
+                servers[outbound['type']].append(outbound['server'])
+                logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
+        except NoAnswer:
+            continue
+        except Exception:
+            logging.exception('获取节点失败')
+            continue
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write(f"""## 结果
