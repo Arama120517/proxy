@@ -1,6 +1,6 @@
 import json
 import logging
-from ipaddress import IPv6Address, ip_address
+from ipaddress import ip_address
 from pathlib import Path
 
 from dns.resolver import NoAnswer, Resolver
@@ -45,11 +45,13 @@ with Reader('Country.mmdb') as geo_reader:
                     ip = outbound['server']
 
                 try:
-                    # 不处理 IPv6 地址
-                    if isinstance(ip_address(ip), IPv6Address):
-                        continue
+                    ip_address(ip)
                 except ValueError:
-                    ip = str(resolver.resolve(ip, 'A')[0])
+                    try:
+                        ip = str(resolver.resolve(ip, 'A')[0])
+                    except (NoAnswer, Exception):
+                        # 可能是IPv6地址
+                        ip = str(resolver.resolve(ip, 'A')[0])
 
                 response = geo_reader.country(ip)
 
@@ -63,8 +65,6 @@ with Reader('Country.mmdb') as geo_reader:
                 template['outbounds'].insert(-3, outbound)
 
                 servers[outbound['type']].append(outbound['server'])
-        except NoAnswer:
-            continue
         except Exception:
             logging.exception('获取节点失败')
             continue
