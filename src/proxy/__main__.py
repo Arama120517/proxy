@@ -51,7 +51,7 @@ with Reader('Country.mmdb') as geo_reader:
                         ip = str(resolver.resolve(ip, 'A')[0])
                     except (NoAnswer, Exception):
                         # 可能是IPv6地址
-                        ip = str(resolver.resolve(ip, 'A')[0])
+                        ip = str(resolver.resolve(ip, 'AAAA')[0])
 
                 response = geo_reader.country(ip)
 
