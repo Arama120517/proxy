@@ -7,7 +7,7 @@ from dns.rdatatype import TXT
 from dns.resolver import Resolver
 from requests import RequestException, Response
 
-from src import BaseSource, OutBounds
+from proxy import BaseSource, OutBounds
 
 
 class JegoCloudSource(BaseSource):

@@ -1,13 +1,20 @@
 import re
+from datetime import datetime, timedelta, timezone
 
 from bs4 import BeautifulSoup
 from requests import Response
 
-from src import BaseSource, OutBounds
+from proxy import BaseSource, OutBounds
 
 
 class FreeClashNodeSource(BaseSource):
     """https://www.freeclashnode.com"""
+
+    time: datetime
+
+    def __init__(self):
+        super().__init__()
+        self.time = datetime.now(timezone(timedelta(), 'Asia/Shanghai'))
 
     def get_outbounds(self) -> OutBounds:
         response: Response = self.get('https://www.freeclashnode.com')
@@ -15,7 +22,8 @@ class FreeClashNodeSource(BaseSource):
 
         links: list[str] = []
         for article in BeautifulSoup(response.text, 'html.parser').find_all(
-            'a', title=lambda x: x and '订阅链接每天更新' in x
+            'a',
+            class_='list-image-box',
         ):
             links.append(f'https://www.freeclashnode.com/{article["href"]}')
 

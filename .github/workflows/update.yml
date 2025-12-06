@@ -20,20 +20,21 @@ jobs:
         run: echo ${{ secrets.GH_TOKEN }} | gh auth login --with-token
 
       - name: 运行程序
-        run: uv run --no-dev -m src.main
+        run: |
+          uv sync
+          uv run --no-dev -m proxy.main
         env:
           JEGOCLOUD_TOKEN: ${{ secrets.JEGOCLOUD_TOKEN }}
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
           JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
 
-      - name: 删除相同标签的发行版
-        continue-on-error: true
-        run: gh release delete --yes --cleanup-tag result
+      - name: 获取日期
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
       - name: 创建发行版
         uses: softprops/action-gh-release@v2
         with:
           draft: false
           name: "更新服务器节点"
-          tag_name: result
+          tag_name: ${{ env.DATE }}
           files: result.json
