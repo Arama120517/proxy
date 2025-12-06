@@ -6,7 +6,10 @@ from requests import Session
 from rich.logging import RichHandler
 from ua_generator import generate
 
-# 测试用
+# 初始化日志
+logging.root.setLevel(logging.INFO)
+logging.root.handlers = [RichHandler(rich_tracebacks=True)]
+
 try:
     import dotenv
 
@@ -24,10 +27,7 @@ class BaseSource(ABC, Session):
         super().__init__()
 
         self.headers.update({'User-Agent': generate().text})
-
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.level = logging.INFO
-        self.logger.handlers = [RichHandler(rich_tracebacks=True)]
 
     def main(self) -> NoReturn:
         """运行程序"""

@@ -1,7 +1,7 @@
 import json
+import logging
 from pathlib import Path
 from socket import gethostbyname
-from time import sleep
 
 import requests
 
@@ -53,8 +53,7 @@ for source in SOURCES:
             template['outbounds'].insert(-3, outbound)
 
             servers[outbound['type']].append(outbound['server'])
-
-            sleep(0.5)
+            logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
     except Exception:
         continue
 
