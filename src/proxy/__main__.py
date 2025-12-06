@@ -46,7 +46,7 @@ for source in SOURCES:
             country_name = data.get('country_name') or data.get('region') or '未知'
             flag_emoji = country_code_to_flag_emoji(country_code)
 
-            tag: str = f'{flag_emoji} {country_name} {outbound["type"]}_{len(type_servers)}'
+            tag: str = f'{flag_emoji} | {country_name} | [{outbound["type"]}]-{len(type_servers)}'
             outbound['tag'] = tag
             template['outbounds'][0]['outbounds'].append(tag)
             template['outbounds'][1]['outbounds'].append(tag)
@@ -55,6 +55,7 @@ for source in SOURCES:
             servers[outbound['type']].append(outbound['server'])
             logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
     except Exception:
+        logging.exception(f'从 {source.__class__.__name__} 获取节点失败')
         continue
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
