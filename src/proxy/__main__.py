@@ -1,5 +1,6 @@
 import json
 import logging
+from ipaddress import ip_address
 from pathlib import Path
 
 from dns.resolver import Resolver
@@ -33,36 +34,31 @@ with Reader('Country.mmdb') as geo_reader:
     resolver = Resolver()
 
     for source in SOURCES:
-        try:
-            for outbound in source.get_outbounds():
-                type_servers = servers.setdefault(outbound['type'], [])
-                # 防止重复
-                if outbound['server'] in type_servers:
-                    continue
-                ip = outbound['server']
+        for outbound in source.get_outbounds():
+            type_servers = servers.setdefault(outbound['type'], [])
+            # 防止重复
+            if outbound['server'] in type_servers:
+                continue
+            ip = outbound['server']
 
-                if (
-                    ':' not in outbound['server']
-                    or not outbound['server'].replace('.', '').isdigit()
-                ):
-                    ip = str(resolver.resolve(ip, 'A')[0])
+            try:
+                ip_address(ip)
+            except ValueError:
+                ip = str(resolver.resolve(ip, 'A')[0])
 
-                response = geo_reader.country(ip)
+            response = geo_reader.country(ip)
 
-                country_code = response.country.iso_code
-                flag_emoji = country_code_to_flag_emoji(country_code)
+            country_code = response.country.iso_code
+            flag_emoji = country_code_to_flag_emoji(country_code)
 
-                tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
-                outbound['tag'] = tag
-                template['outbounds'][0]['outbounds'].append(tag)
-                template['outbounds'][1]['outbounds'].append(tag)
-                template['outbounds'].insert(-3, outbound)
+            tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
+            outbound['tag'] = tag
+            template['outbounds'][0]['outbounds'].append(tag)
+            template['outbounds'][1]['outbounds'].append(tag)
+            template['outbounds'].insert(-3, outbound)
 
-                servers[outbound['type']].append(outbound['server'])
-                logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
-        except Exception:
-            logging.exception(f'从 {source.__class__.__name__} 获取节点失败')
-            continue
+            servers[outbound['type']].append(outbound['server'])
+            logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write(f"""## 结果
