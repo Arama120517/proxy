@@ -164,6 +164,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-# 结果
+# Project
 /*.json
-/test_summary.md
+/release_notes.md
+/Country.mmdb

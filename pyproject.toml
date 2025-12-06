@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "beautifulsoup4>=4.13.4",
     "dnspython>=2.7.0",
+    "geoip2>=5.2.0",
     "requests>=2.32.3",
     "rich>=13.9.4",
     "ua-generator>=2.0.5",
@@ -24,6 +25,10 @@ line-length = 100
 output-format = "grouped"
 preview = true
 fix = true
+
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+default = true
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "N", "I"]

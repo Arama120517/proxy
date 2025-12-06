@@ -1,9 +1,9 @@
 import json
 import logging
 from pathlib import Path
-from socket import gethostbyname
 
-import requests
+from dns.resolver import Resolver
+from geoip2.database import Reader
 
 from proxy import BaseSource
 from proxy.free_clash_node import FreeClashNodeSource
@@ -29,34 +29,40 @@ with open(SRC_DIR_PATH / 'template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
 servers: dict[str, list[str]] = {}
-for source in SOURCES:
-    try:
-        for outbound in source.get_outbounds():
-            type_servers = servers.setdefault(outbound['type'], [])
-            # 防止重复
-            if outbound['server'] in type_servers:
-                continue
-            ip = gethostbyname(outbound['server'])
+with Reader('Country.mmdb') as geo_reader:
+    resolver = Resolver()
 
-            response = requests.get(f'https://ipinfo.io/{ip}/json', timeout=6)
-            response.raise_for_status()
+    for source in SOURCES:
+        try:
+            for outbound in source.get_outbounds():
+                type_servers = servers.setdefault(outbound['type'], [])
+                # 防止重复
+                if outbound['server'] in type_servers:
+                    continue
+                ip = outbound['server']
 
-            data = response.json()
-            country_code = data.get('country', '').strip()
-            country_name = data.get('country_name') or data.get('region') or '未知'
-            flag_emoji = country_code_to_flag_emoji(country_code)
+                if (
+                    ':' not in outbound['server']
+                    or not outbound['server'].replace('.', '').isdigit()
+                ):
+                    ip = str(resolver.resolve(ip, 'A')[0])
 
-            tag: str = f'{flag_emoji} | {country_name} | [{outbound["type"]}]-{len(type_servers)}'
-            outbound['tag'] = tag
-            template['outbounds'][0]['outbounds'].append(tag)
-            template['outbounds'][1]['outbounds'].append(tag)
-            template['outbounds'].insert(-3, outbound)
+                response = geo_reader.country(ip)
 
-            servers[outbound['type']].append(outbound['server'])
-            logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
-    except Exception:
-        logging.exception(f'从 {source.__class__.__name__} 获取节点失败')
-        continue
+                country_code = response.country.iso_code
+                flag_emoji = country_code_to_flag_emoji(country_code)
+
+                tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
+                outbound['tag'] = tag
+                template['outbounds'][0]['outbounds'].append(tag)
+                template['outbounds'][1]['outbounds'].append(tag)
+                template['outbounds'].insert(-3, outbound)
+
+                servers[outbound['type']].append(outbound['server'])
+                logging.info(f'添加节点: {tag} - {outbound["server"]}:{outbound["server_port"]}')
+        except Exception:
+            logging.exception(f'从 {source.__class__.__name__} 获取节点失败')
+            continue
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write(f"""## 结果
