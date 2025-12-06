@@ -67,7 +67,7 @@ with Reader('Country.mmdb') as geo_reader:
             continue
         except Exception:
             logging.exception('获取节点失败')
-            exit(1)
+            continue
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 类型 | 节点数量 |
