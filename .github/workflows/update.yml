@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: "45 2 * * *"
   workflow_dispatch:
-  push:
 
 permissions:
   contents: write
@@ -13,7 +12,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
 
       - name: 登录 GitHub CLI
@@ -22,7 +21,7 @@ jobs:
       - name: 运行程序
         run: |
           uv sync
-          uv run --no-dev -m proxy.main
+          uv run --no-dev -m proxy
         env:
           JEGOCLOUD_TOKEN: ${{ secrets.JEGOCLOUD_TOKEN }}
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
