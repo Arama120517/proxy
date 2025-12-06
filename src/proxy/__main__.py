@@ -2,9 +2,8 @@ import json
 import logging
 from ipaddress import ip_address
 from pathlib import Path
-from socket import getaddrinfo
 
-from dns.resolver import Resolver
+from dns.resolver import NoAnswer, Resolver
 from geoip2.database import Reader
 
 from proxy import BaseSource
@@ -37,7 +36,6 @@ with Reader('Country.mmdb') as geo_reader:
         try:
             for outbound in source.get_outbounds():
                 type_servers = servers.setdefault(outbound['type'], [])
-                print(outbound['type'], outbound['server'])
                 # 防止重复
                 if outbound['server'] in type_servers:
                     continue
@@ -46,8 +44,11 @@ with Reader('Country.mmdb') as geo_reader:
                 try:
                     ip_address(ip)
                 except ValueError:
-                    infos = getaddrinfo(ip, outbound['server_port'])
-                    ip = infos[0][4][0]
+                    try:
+                        ip = str(resolver.resolve(ip, 'A')[0])
+                    except (NoAnswer, Exception):
+                        # 可能是IPv6地址
+                        ip = str(resolver.resolve(ip, 'AAAA')[0])
 
                 response = geo_reader.country(ip)
 
