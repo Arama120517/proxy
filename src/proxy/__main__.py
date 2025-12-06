@@ -2,8 +2,9 @@ import json
 import logging
 from ipaddress import ip_address
 from pathlib import Path
+from socket import getaddrinfo
 
-from dns.resolver import NoAnswer, Resolver
+from dns.resolver import Resolver
 from geoip2.database import Reader
 
 from proxy import BaseSource
@@ -39,26 +40,20 @@ with Reader('Country.mmdb') as geo_reader:
                 # 防止重复
                 if outbound['server'] in type_servers:
                     continue
-                if 'tls' in outbound and 'server_name' in outbound['tls']:
-                    ip = outbound['tls']['server_name']
-                else:
-                    ip = outbound['server']
+                ip = outbound['server']
 
                 try:
                     ip_address(ip)
                 except ValueError:
-                    try:
-                        ip = str(resolver.resolve(ip, 'A')[0])
-                    except (NoAnswer, Exception):
-                        # 可能是IPv6地址
-                        ip = str(resolver.resolve(ip, 'AAAA')[0])
+                    infos = getaddrinfo(ip, outbound['port'])
+                    ip = infos[0][4][0]
 
                 response = geo_reader.country(ip)
 
                 country_code = response.country.iso_code
                 flag_emoji = country_code_to_flag_emoji(country_code)
 
-                tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
+                tag: str = f'{flag_emoji} | {response.country.name} | [{outbound["type"]}]-{len(type_servers)}'
                 outbound['tag'] = tag
                 template['outbounds'][0]['outbounds'].append(tag)
                 template['outbounds'][1]['outbounds'].append(tag)
