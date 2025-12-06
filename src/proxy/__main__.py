@@ -39,7 +39,10 @@ with Reader('Country.mmdb') as geo_reader:
                 # 防止重复
                 if outbound['server'] in type_servers:
                     continue
-                ip = outbound['server']
+                if 'tls' in outbound and 'server_name' in outbound['tls']:
+                    ip = outbound['tls']['server_name']
+                else:
+                    ip = outbound['server']
 
                 try:
                     # 不处理 IPv6 地址
