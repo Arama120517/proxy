@@ -37,6 +37,7 @@ with Reader('Country.mmdb') as geo_reader:
         try:
             for outbound in source.get_outbounds():
                 type_servers = servers.setdefault(outbound['type'], [])
+                print(outbound['type'], outbound['server'])
                 # 防止重复
                 if outbound['server'] in type_servers:
                     continue
@@ -45,7 +46,7 @@ with Reader('Country.mmdb') as geo_reader:
                 try:
                     ip_address(ip)
                 except ValueError:
-                    infos = getaddrinfo(ip, outbound['port'])
+                    infos = getaddrinfo(ip, outbound['server_port'])
                     ip = infos[0][4][0]
 
                 response = geo_reader.country(ip)
