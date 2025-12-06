@@ -52,7 +52,7 @@ for source in SOURCES:
             template['outbounds'][1]['outbounds'].append(tag)
             template['outbounds'].insert(-3, outbound)
 
-            servers.append(outbound['server'])
+            servers[outbound['type']].append(outbound['server'])
 
             sleep(0.5)
     except Exception:
