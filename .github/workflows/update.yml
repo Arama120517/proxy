@@ -39,7 +39,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: false
-          name: "更新服务器节点"
-          tag_name: ${{ env.DATE }}
+          name: ${{ env.TITLE }}
+          tag_name: ${{ env.TAG }}
           files: result.json
           body_path: ./release_notes.md
