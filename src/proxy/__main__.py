@@ -1,7 +1,9 @@
 import json
-import os
-from dataclasses import dataclass
 from pathlib import Path
+from socket import gethostbyname
+from time import sleep
+
+import requests
 
 from proxy import BaseSource
 from proxy.free_clash_node import FreeClashNodeSource
@@ -13,48 +15,59 @@ CURRENT_DIR_PATH: Path = Path().cwd()
 SRC_DIR_PATH: Path = CURRENT_DIR_PATH / 'src'
 
 
-@dataclass
-class Status:
-    success: bool
-    tag_count: int
+def country_code_to_flag_emoji(code: str) -> str:
+    """'US' -> '🇺🇸'"""
+    if not code or len(code) != 2:
+        return '🌐'
+    try:
+        return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in code.upper())
+    except Exception:
+        return '❓'
 
 
 with open(SRC_DIR_PATH / 'template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
-servers: list[str] = []
-status: dict[str, Status] = {}
+servers: dict[str, list[str]] = {}
 for source in SOURCES:
-    name = source.__class__.__name__
-    status[name] = Status(False, 0)
     try:
         for outbound in source.get_outbounds():
+            type_servers = servers.setdefault(outbound['type'], [])
             # 防止重复
-            if outbound['server'] in servers:
+            if outbound['server'] in type_servers:
                 continue
+            ip = gethostbyname(outbound['server'])
 
-            tag: str = outbound['tag']
+            response = requests.get(f'https://ipinfo.io/{ip}/json', timeout=6)
+            response.raise_for_status()
+
+            data = response.json()
+            country_code = data.get('country', '').strip()
+            country_name = data.get('country_name') or data.get('region') or '未知'
+            flag_emoji = country_code_to_flag_emoji(country_code)
+
+            tag: str = f'{flag_emoji} {country_name} {outbound["type"]}_{len(type_servers)}'
+            outbound['tag'] = tag
             template['outbounds'][0]['outbounds'].append(tag)
             template['outbounds'][1]['outbounds'].append(tag)
             template['outbounds'].insert(-3, outbound)
 
             servers.append(outbound['server'])
 
-            status[name].tag_count += 1
-        status[name].success = True
+            sleep(0.5)
     except Exception:
         continue
 
-with open(os.environ.get('GITHUB_STEP_SUMMARY'), 'w', encoding='utf-8') as f:
+with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write(f"""## 结果
 
 - **节点总数**: {len(template['outbounds']) - 5}
 
-| 名称 | 状态 | 节点数量 |
-| ---- | ---- | -------- |
+| 类型 | 节点数量 |
+| ---- | -------- |
 """)
-    for name, stat in status.items():
-        f.write(f'| {name} | {"✅" if stat.success else "❌"} | {stat.tag_count} |\n')
+    for tag, servers_list in servers.items():
+        f.write(f'| {tag} | {len(servers_list)} |\n')
 
 with open(CURRENT_DIR_PATH / 'result.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(template, indent=4, ensure_ascii=False))

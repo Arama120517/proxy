@@ -37,3 +37,4 @@ jobs:
           name: "更新服务器节点"
           tag_name: ${{ env.DATE }}
           files: result.json
+          body_path: ./release_notes.md
