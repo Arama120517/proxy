@@ -64,6 +64,8 @@ with Reader('Country.mmdb') as geo_reader:
                 template['outbounds'].insert(-3, outbound)
 
                 servers[outbound['type']].append(outbound['server'])
+        except NoAnswer:  # 不可用
+            continue
         except Exception:
             logging.exception('获取节点失败')
             continue
