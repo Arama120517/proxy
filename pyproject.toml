@@ -26,10 +26,6 @@ output-format = "grouped"
 preview = true
 fix = true
 
-[[tool.uv.index]]
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
-default = true
-
 [tool.ruff.lint]
 select = ["E", "W", "F", "N", "I"]
 
