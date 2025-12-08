@@ -57,8 +57,7 @@ with Reader('Country.mmdb') as geo_reader:
                     continue
 
                 flag_emoji = country_code_to_flag_emoji(country_code)
-
-                tag: str = f'{flag_emoji} | {response.country.names["zh-CN"]} | [{outbound["type"]}]-{len(type_servers)}'
+                tag: str = f'{flag_emoji} | {response.country.iso_code} | [{outbound["type"]}]-{len(type_servers)}'
                 outbound['tag'] = tag
                 template['outbounds'][0]['outbounds'].append(tag)
                 template['outbounds'][1]['outbounds'].append(tag)
