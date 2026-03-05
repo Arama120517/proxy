@@ -1,6 +1,5 @@
 import os
 import re
-import subprocess
 from uuid import uuid4
 
 from dns.rdatatype import TXT
@@ -16,12 +15,20 @@ class JegoCloudSource(BaseSource):
     def __init__(self) -> None:
         super().__init__()
 
-        self.token: str = os.environ.get('JEGOCLOUD_TOKEN')
-        self.username: str = os.environ.get('JEGOCLOUD_USERNAME')
-        self.password: str = os.environ.get('JEGOCLOUD_PASSWORD')
-
         self.resolver: Resolver = Resolver()
         self.resolver.nameservers = ['8.8.8.8', '8.8.4.4']
+
+        response: Response = self.post(
+            f'{self.api_url}/options/login',
+            data={
+                'username': os.environ.get('JEGOCLOUD_USERNAME'),
+                'password': os.environ.get('JEGOCLOUD_PASSWORD'),
+            },
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+        )
+        response.raise_for_status()
+        response: dict = response.json()
+        self.token: str = response['session']['token']
 
         urls: list[str] = []
         for api_url in [
@@ -51,20 +58,6 @@ class JegoCloudSource(BaseSource):
         response: Response = self.get(f'{self.api_url}/popup', params={'token': self.token})
         response.raise_for_status()
         response: dict = response.json()
-
-        if not response['session']['proxy_settings'].get('pacScript'):
-            self.logger.warning('Token失效, 尝试重新获取Token')
-            response: Response = self.post(
-                f'{self.api_url}/options/login',
-                data={'username': self.username, 'password': self.password},
-                headers={'Content-Type': 'application/x-www-form-urlencoded'},
-            )
-            response.raise_for_status()
-            response: dict = response.json()
-            token: str = response['session']['token']
-            subprocess.check_call(
-                ['gh', 'secret', 'set', 'JEGOCLOUD_TOKEN', '--app', 'actions', '--body', token],
-            )
 
         data: set[dict] = set(
             re.findall(

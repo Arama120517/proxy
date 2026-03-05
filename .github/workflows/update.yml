@@ -15,9 +15,6 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
 
-      - name: 登录 GitHub CLI
-        run: echo ${{ secrets.GH_TOKEN }} | gh auth login --with-token
-
       - name: 下载GeoIP数据库
         run: wget https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
 
@@ -26,7 +23,6 @@ jobs:
           uv sync
           uv run --no-dev -m proxy
         env:
-          JEGOCLOUD_TOKEN: ${{ secrets.JEGOCLOUD_TOKEN }}
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
           JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
 
