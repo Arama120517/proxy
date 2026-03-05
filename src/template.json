@@ -93,9 +93,11 @@
       "type": "urltest",
       "tag": "url-test",
       "outbounds": [],
-      "url": "https://www.gstatic.com/generate_204",
-      "interval": "3m",
-      "tolerance": 50
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "45s",
+      "tolerance": 25,
+      "idle_timeout": "12m",
+      "interrupt_exist_connections": true
     },
     {
       "type": "direct",

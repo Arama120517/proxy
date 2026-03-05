@@ -76,5 +76,7 @@ with open('./release_notes.md', 'w', encoding='utf-8') as f:
     for tag, type_num in servers.items():
         f.write(f'| {tag} | {type_num} |\n')
 
+template['outbounds'] = sorted(template['outbounds'], key=lambda x: x['tag'])
+
 with open('./result.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(template, indent=4, ensure_ascii=False))
