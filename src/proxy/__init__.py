@@ -49,9 +49,4 @@ class BaseSource(ABC, Session):
 
     @staticmethod
     def extract_proxy_servers(config: dict) -> OutBounds:
-        servers: OutBounds = []
-        for outbound in config['outbounds']:
-            if 'server' not in outbound:
-                continue
-            servers.append(outbound)
-        return servers
+        return [o for o in config.get('outbounds', []) if o.get('server')]
