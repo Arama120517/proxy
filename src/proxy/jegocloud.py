@@ -1,10 +1,9 @@
 import os
 import re
-from uuid import uuid4
 
 from dns.rdatatype import TXT
 from dns.resolver import Resolver
-from requests import RequestException, Response
+from requests import Response
 
 from proxy import BaseSource, OutBounds
 
@@ -30,29 +29,9 @@ class JegoCloudSource(BaseSource):
         response: dict = response.json()
         self.token: str = response['session']['token']
 
-        urls: list[str] = []
-        for api_url in [
-            'https://*.statichuawei.com',
-            'https://*.taintedge.com:2019',
-            'http://*.cdnfeishu.com',
-            'https://*.y62i.com',
-        ]:
-            urls.append(api_url.replace('*', str(uuid4())))
-
-        urls.append(self.resolver.resolve('v3.jego.club', TXT)[0].to_text().strip('"'))
-
-        for url in urls:
-            try:
-                response: Response = self.post(
-                    f'{url}/chrome/session', data={'token': self.token}, timeout=5
-                )
-                response.raise_for_status()
-            except RequestException:
-                self.logger.warning(f'API不可用: {url}')
-                urls.remove(url)
-                continue
-
-        self.api_url: str = f'{urls[0]}/chrome'
+        self.api_url: str = (
+            self.resolver.resolve('v3.jego.club', TXT)[0].to_text().strip('"') + '/chrome'
+        )
 
     def get_outbounds(self) -> OutBounds:
         response: Response = self.get(f'{self.api_url}/popup', params={'token': self.token})
