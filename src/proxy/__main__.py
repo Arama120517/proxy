@@ -1,7 +1,6 @@
 import json
 import logging
 from ipaddress import ip_address
-from pathlib import Path
 
 from dns.resolver import NoAnswer, Resolver
 from geoip2.database import Reader
@@ -12,12 +11,8 @@ from proxy.jegocloud import JegoCloudSource
 
 SOURCES: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
 
-CURRENT_DIR_PATH: Path = Path().cwd()
-SRC_DIR_PATH: Path = CURRENT_DIR_PATH / 'src'
 
-
-def country_code_to_flag_emoji(code: str) -> str:
-    """'US' -> '🇺🇸'"""
+def country_code_to_emoji(code: str) -> str:
     if not code or len(code) != 2:
         return '🌐'
     try:
@@ -26,24 +21,24 @@ def country_code_to_flag_emoji(code: str) -> str:
         return '❓'
 
 
-with open(SRC_DIR_PATH / 'template.json', 'r', encoding='utf-8') as f:
+with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
-servers: dict[str, list[str]] = {}
+servers: dict[str, int] = {}
 with Reader('Country.mmdb') as geo_reader:
     resolver = Resolver()
     for source in SOURCES:
         try:
             for outbound in source.get_outbounds():
-                type_servers = servers.setdefault(outbound['type'], [])
-                # 防止重复
-                if outbound['server'] in type_servers:
-                    continue
-                ip = outbound['server']
-
                 # 设备无法使用anytls作为type
                 if outbound['type'] == 'anytls':
                     continue
+
+                type_num = servers.setdefault(outbound['type'], 1)
+                # 防止重复
+                if outbound['server'] in type_num:
+                    continue
+                ip = outbound['server']
 
                 try:
                     ip_address(ip)
@@ -60,14 +55,14 @@ with Reader('Country.mmdb') as geo_reader:
                 if country_code == 'CN':
                     continue
 
-                flag_emoji = country_code_to_flag_emoji(country_code)
-                tag: str = f'{flag_emoji} | {response.country.iso_code} | [{outbound["type"]}]-{len(type_servers)}'
+                flag_emoji = country_code_to_emoji(country_code)
+                tag: str = f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{len(type_num)}'
                 outbound['tag'] = tag
                 template['outbounds'][0]['outbounds'].append(tag)
                 template['outbounds'][1]['outbounds'].append(tag)
                 template['outbounds'].insert(-3, outbound)
 
-                servers[outbound['type']].append(outbound['server'])
+                servers[outbound['type']] += 1
         except NoAnswer:  # 不可用
             continue
         except Exception:
@@ -78,8 +73,8 @@ with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 类型 | 节点数量 |
 | ---- | -------- |
 """)
-    for tag, servers_list in servers.items():
-        f.write(f'| {tag} | {len(servers_list)} |\n')
+    for tag, type_num in servers.items():
+        f.write(f'| {tag} | {type_num} |\n')
 
-with open(CURRENT_DIR_PATH / 'result.json', 'w', encoding='utf-8') as f:
+with open('./result.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(template, indent=4, ensure_ascii=False))
