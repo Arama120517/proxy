@@ -16,6 +16,9 @@ class JegoCloudSource(BaseSource):
 
         self.resolver: Resolver = Resolver()
         self.resolver.nameservers = ['8.8.8.8', '8.8.4.4']
+        self.api_url: str = (
+            self.resolver.resolve('v3.jego.club', TXT)[0].to_text().strip('"') + '/chrome'
+        )
 
         response: Response = self.post(
             f'{self.api_url}/options/login',
@@ -28,10 +31,6 @@ class JegoCloudSource(BaseSource):
         response.raise_for_status()
         response: dict = response.json()
         self.token: str = response['session']['token']
-
-        self.api_url: str = (
-            self.resolver.resolve('v3.jego.club', TXT)[0].to_text().strip('"') + '/chrome'
-        )
 
     def get_outbounds(self) -> OutBounds:
         response: Response = self.get(f'{self.api_url}/popup', params={'token': self.token})
