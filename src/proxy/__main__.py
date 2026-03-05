@@ -41,6 +41,10 @@ with Reader('Country.mmdb') as geo_reader:
                     continue
                 ip = outbound['server']
 
+                # 设备无法使用anytls作为type
+                if outbound['type'] == 'anytls':
+                    continue
+
                 try:
                     ip_address(ip)
                 except ValueError:
