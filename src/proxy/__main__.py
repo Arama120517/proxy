@@ -64,7 +64,7 @@ with Reader('Country.mmdb') as geo_reader:
                 template['outbounds'][1]['outbounds'].append(tag)
                 template['outbounds'].insert(-3, outbound)
 
-                servers[outbound['type']] += 1
+                servers[outbound['type']].append(outbound['server'])
         except NoAnswer:  # 不可用
             continue
         except Exception:
