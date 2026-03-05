@@ -24,7 +24,7 @@ def country_code_to_emoji(code: str) -> str:
 with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
-servers: dict[str, int] = {}
+servers: dict[str, list[str]] = {}
 with Reader('Country.mmdb') as geo_reader:
     resolver = Resolver()
     for source in SOURCES:
@@ -34,9 +34,9 @@ with Reader('Country.mmdb') as geo_reader:
                 if outbound['type'] == 'anytls':
                     continue
 
-                type_num = servers.setdefault(outbound['type'], 1)
+                type_servers = servers.setdefault(outbound['type'], [])
                 # 防止重复
-                if outbound['server'] in type_num:
+                if outbound['server'] in type_servers:
                     continue
                 ip = outbound['server']
 
@@ -56,7 +56,9 @@ with Reader('Country.mmdb') as geo_reader:
                     continue
 
                 flag_emoji = country_code_to_emoji(country_code)
-                tag: str = f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{len(type_num)}'
+                tag: str = (
+                    f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{len(type_servers) + 1}'
+                )
                 outbound['tag'] = tag
                 template['outbounds'][0]['outbounds'].append(tag)
                 template['outbounds'][1]['outbounds'].append(tag)
@@ -73,8 +75,8 @@ with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 类型 | 节点数量 |
 | ---- | -------- |
 """)
-    for tag, type_num in servers.items():
-        f.write(f'| {tag} | {type_num} |\n')
+    for tag, type_servers in servers.items():
+        f.write(f'| {tag} | {len(type_servers)} |\n')
 
 template['outbounds'] = sorted(template['outbounds'], key=lambda x: x['tag'])
 
