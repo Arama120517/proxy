@@ -12,11 +12,14 @@ env:
 jobs:
   get_modules:
     runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.scan.outputs.modules }}
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
 
       - name: 获取模块列表
+        id: scan
         run: |
           modules=$(find ./modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]')
           echo "modules=$modules" >> $GITHUB_OUTPUT
