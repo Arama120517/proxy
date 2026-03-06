@@ -5,66 +5,56 @@ from ipaddress import ip_address
 from dns.resolver import NoAnswer, Resolver
 from geoip2.database import Reader
 
-from proxy import BaseSource
-from proxy.free_clash_node import FreeClashNodeSource
-from proxy.jegocloud import JegoCloudSource
-
-SOURCES: list[BaseSource] = [JegoCloudSource(), FreeClashNodeSource()]
-
-
-def country_code_to_emoji(code: str) -> str:
-    if not code or len(code) != 2:
-        return '🌐'
-    try:
-        return ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in code.upper())
-    except Exception:
-        return '❓'
-
+from proxy import load_result
 
 with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
+
 servers: dict[str, list[str]] = {}
 with Reader('Country.mmdb') as geo_reader:
     resolver = Resolver()
-    for source in SOURCES:
+    for outbound in load_result():
         try:
-            for outbound in source.get_outbounds():
-                # 设备无法使用anytls作为type
-                if outbound['type'] == 'anytls':
-                    continue
+            if outbound['type'] == 'anytls':
+                continue
 
-                type_servers = servers.setdefault(outbound['type'], [])
-                # 防止重复
-                if outbound['server'] in type_servers:
-                    continue
-                ip = outbound['server']
+            type_servers = servers.setdefault(outbound['type'], [])
 
+            # 防止重复
+            if outbound['server'] in type_servers:
+                continue
+            ip = outbound['server']
+
+            try:
+                ip_address(ip)
+            except ValueError:
                 try:
-                    ip_address(ip)
-                except ValueError:
-                    try:
-                        ip = str(resolver.resolve(ip, 'A')[0])
-                    except (NoAnswer, Exception):
-                        # 可能是IPv6地址
-                        ip = str(resolver.resolve(ip, 'AAAA')[0])
+                    ip = str(resolver.resolve(ip, 'A')[0])
+                except (NoAnswer, Exception):
+                    # 可能是IPv6地址
+                    ip = str(resolver.resolve(ip, 'AAAA')[0])
 
-                response = geo_reader.country(ip)
+            response = geo_reader.country(ip)
 
-                country_code = response.country.iso_code
-                if country_code == 'CN':
-                    continue
+            country_code = response.country.iso_code
+            if country_code == 'CN':
+                continue
 
-                flag_emoji = country_code_to_emoji(country_code)
-                tag: str = (
-                    f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{len(type_servers) + 1}'
-                )
-                outbound['tag'] = tag
-                template['outbounds'][0]['outbounds'].append(tag)
-                template['outbounds'][1]['outbounds'].append(tag)
-                template['outbounds'].insert(-3, outbound)
+            flag_emoji = (
+                ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_code.upper())
+                if country_code and len(country_code) == 2
+                else '🌐'
+            )
+            tag: str = (
+                f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{len(type_servers) + 1}'
+            )
+            outbound['tag'] = tag
+            template['outbounds'][0]['outbounds'].append(tag)
+            template['outbounds'][1]['outbounds'].append(tag)
+            template['outbounds'].insert(-3, outbound)
 
-                servers[outbound['type']].append(outbound['server'])
+            servers[outbound['type']].append(outbound['server'])
         except NoAnswer:  # 不可用
             continue
         except Exception:
@@ -79,4 +69,4 @@ with open('./release_notes.md', 'w', encoding='utf-8') as f:
         f.write(f'| {tag} | {len(type_servers)} |\n')
 
 with open('./result.json', 'w', encoding='utf-8') as f:
-    f.write(json.dumps(template, indent=4, ensure_ascii=False, sort_keys=True))
+    f.write(json.dumps(template, indent=4, ensure_ascii=False))

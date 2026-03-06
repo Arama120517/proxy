@@ -1,14 +1,9 @@
-import logging
-from abc import ABC, abstractmethod
-from typing import Any, NoReturn
+import json
+from pathlib import Path
+from typing import Any
 
 from requests import Session
-from rich.logging import RichHandler
 from ua_generator import generate
-
-# 初始化日志
-logging.root.setLevel(logging.INFO)
-logging.root.handlers = [RichHandler(rich_tracebacks=True)]
 
 try:
     import dotenv
@@ -17,36 +12,64 @@ try:
 except (ModuleNotFoundError, IOError):
     pass
 
-OutBounds = list[dict[str, Any]]
+__all__ = ['OutBound', 'OutBounds', 'get_session', 'load_result', 'dump_result']
+
+type OutBound = dict[str, Any]
+type OutBounds = list[OutBound]
 
 
-class BaseSource(ABC, Session):
-    logger: logging.Logger
+def get_session() -> Session:
+    session = Session()
+    session.headers.update({'User-Agent': generate().text})
+    return session
 
-    def __init__(self):
-        super().__init__()
 
-        self.headers.update({'User-Agent': generate().text})
-        self.logger = logging.getLogger(self.__class__.__name__)
+def _get_outbounds(config: dict[str, Any]) -> OutBounds:
+    return [o for o in config.get('outbounds', []) if o.get('server')]
 
-    def main(self) -> NoReturn:
-        """运行程序"""
 
-        from sys import exit
+def load_result() -> OutBounds:
+    outbounds: OutBounds = []
 
-        from rich import print_json
+    for result_dir in [f for f in Path('./results').iterdir() if f.is_dir()]:
+        with (result_dir / 'result.json').open('r', encoding='utf-8') as f:
+            outbounds += json.load(f)
 
-        try:
-            servers = self.get_outbounds()
-            print_json(data=servers, indent=4, ensure_ascii=False)
-        except Exception:
-            self.logger.exception('获取失败')
+    return outbounds
 
-        exit(0)
 
-    @abstractmethod
-    def get_outbounds(self) -> OutBounds: ...
+def dump_result(config: dict[Any, Any]) -> None:
+    with Path('./result.json').open('w', encoding='utf-8') as f:
+        json.dump(_get_outbounds(config), f, ensure_ascii=False)
 
-    @staticmethod
-    def extract_proxy_servers(config: dict) -> OutBounds:
-        return [o for o in config.get('outbounds', []) if o.get('server')]
+
+# class BaseSource(ABC, Session):
+#     logger: logging.Logger
+
+#     def __init__(self):
+#         super().__init__()
+
+#         self.headers.update({'User-Agent': generate().text})
+#         self.logger = logging.getLogger(self.__class__.__name__)
+
+#     def main(self) -> NoReturn:
+#         """运行程序"""
+
+#         from sys import exit
+
+#         from rich import print_json
+
+#         try:
+#             servers = self.get_outbounds()
+#             print_json(data=servers, indent=4, ensure_ascii=False)
+#         except Exception:
+#             self.logger.exception('获取失败')
+
+#         exit(0)
+
+#     @abstractmethod
+#     def get_outbounds(self) -> OutBounds: ...
+
+#     @staticmethod
+#     def extract_proxy_servers(config: dict) -> OutBounds:
+#         return [o for o in config.get('outbounds', []) if o.get('server')]

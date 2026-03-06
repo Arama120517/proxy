@@ -5,22 +5,68 @@ on:
     - cron: "45 2 * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
+env:
+  JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
+  JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
 
 jobs:
-  run:
+  get_modules:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7
+
+      - name: 获取模块列表
+        run: |
+          modules=$(find ./modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | jq -R -s -c 'split("\n")[:-1]')
+          echo "modules=$modules" >> $GITHUB_OUTPUT
+
+  get_outbounds:
+    needs: get_modules
+    strategy:
+      matrix:
+        module: ${{ fromJson(needs.get_modules.outputs.modules) }}
+      fail-fast: false # 一个失败不影响其他
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+
+      - name: 获取出站配置
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 60
+          warning_on_retry: true
+          command: |
+            uv run --no-dev -m proxy.${{ matrix.module }}
+
+      - name: 上传结果
+        uses: actions/upload-artifact@v7
+        with:
+          name: result-${{ matrix.module }}
+          path: result.json
+
+  pack:
+    needs: get_outbounds
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+
+      - name: 下载结果
+        uses: actions/download-artifact@v8
+        with:
+          path: results
 
       - name: 下载GeoIP数据库
         run: wget https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
 
       - name: 运行程序
         run: |
-          uv sync
           uv run --no-dev -m proxy
         env:
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
