@@ -61,6 +61,9 @@ with Reader('Country.mmdb') as geo_reader:
             logging.exception('获取节点失败')
             continue
 
+# 排序
+template['outbounds'].sort(key=lambda x: x['tag'])
+
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 类型 | 节点数量 |
 | ---- | -------- |
