@@ -62,6 +62,8 @@ with Reader('Country.mmdb') as geo_reader:
             continue
 
 # 排序
+template['outbounds'][0]['outbounds'].sort()
+template['outbounds'][1]['outbounds'].sort()
 template['outbounds'].sort(key=lambda x: x['tag'])
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
