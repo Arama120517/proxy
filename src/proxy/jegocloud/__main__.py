@@ -41,9 +41,9 @@ data: set[dict] = set(
 if not data:
     raise RuntimeError('正则表达式没有匹配到任何节点')
 
-outbounds: OutBounds = []
+results: OutBounds = []
 for index, (host, port) in enumerate(data, start=1):
-    outbounds.append({
+    results.append({
         'type': 'http',
         'tag': f'jegocloud_{index}',
         'server': host,
@@ -57,4 +57,4 @@ for index, (host, port) in enumerate(data, start=1):
         },
     })
 
-dump_result({'outbounds': outbounds})
+dump_result(results)

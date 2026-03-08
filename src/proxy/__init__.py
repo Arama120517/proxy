@@ -24,10 +24,6 @@ def get_session() -> Session:
     return session
 
 
-def _get_outbounds(config: dict[str, Any]) -> OutBounds:
-    return [o for o in config.get('outbounds', []) if o.get('server')]
-
-
 def load_result() -> OutBounds:
     outbounds: OutBounds = []
 
@@ -38,9 +34,13 @@ def load_result() -> OutBounds:
     return outbounds
 
 
-def dump_result(config: dict[Any, Any]) -> None:
+def dump_result(outbounds: OutBounds) -> None:
+    results = []
     with Path('./result.json').open('w', encoding='utf-8') as f:
-        json.dump(_get_outbounds(config), f, ensure_ascii=False)
+        for outbound in outbounds:
+            if 'server' in outbound:
+                results.append(outbound)
+        json.dump(results, f, ensure_ascii=False)
 
 
 # class BaseSource(ABC, Session):

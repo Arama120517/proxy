@@ -1,32 +1,32 @@
 import re
 
 from bs4 import BeautifulSoup
-from requests import Response
+from requests import HTTPError, Response
 
-from proxy import dump_result, get_session
+from proxy import OutBounds, dump_result, get_session
 
-_session: Response = get_session()
+session: Response = get_session()
 
-_response: Response = _session.get('https://www.freeclashnode.com')
-_response.raise_for_status()
+response: Response = session.get('https://www.freeclashnode.com')
+response.raise_for_status()
 
-_response: Response = _session.get(
+response: Response = session.get(
     'https://www.freeclashnode.com/'
-    + BeautifulSoup(_response.text, 'html.parser').find_all(
+    + BeautifulSoup(response.text, 'html.parser').find_all(
         'a',
         class_='list-image-box',
     )[0]['href']
 )
-_response.raise_for_status()
+response.raise_for_status()
 
-_response: Response = _session.get(
-    f'https://clash2sfa.xmdhs.com/sub?sub={
-        "|".join(
-            f"{item}"
-            for item in re.findall(r'https?://[^\s<>"\']+?\.(?:yaml|json|txt)', _response.text)
-        )
-    }'
-)
-_response.raise_for_status()
+results: OutBounds = []
+for item in re.findall(r'https?://[^\s<>"\']+?\.(?:yaml|json|txt)', response.text):
+    try:
+        response: Response = session.get(f'https://clash2sfa.xmdhs.com/sub?sub={f"{item}"}')
+        response.raise_for_status()
+        results += response.json()['outbounds']
+    except HTTPError as e:  # 可能是服务器问题, 有时候获取的yaml文件会报错520
+        if e.response.status_code >= 500:
+            continue
 
-dump_result(_response.json())
+dump_result(results)
