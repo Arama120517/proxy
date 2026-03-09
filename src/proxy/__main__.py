@@ -11,13 +11,6 @@ from proxy import OutBounds, load_result
 with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
-
-def get_result_key(country: Country) -> tuple[str, str]:
-    if country.iso_code == 'TW':
-        return 'TW', '台湾'
-    return country.iso_code, country.names.get('zh_CN', country.iso_code)
-
-
 country_outbounds: dict[tuple[str, str], OutBounds] = {}
 other_outbounds: OutBounds = []
 
@@ -53,15 +46,13 @@ with Reader('Country.mmdb') as geo_reader:
             if country.iso_code == 'CN':
                 continue
 
-            result_key = get_result_key(country)
+            result_key = country.iso_code, country.names.get('zh-CN', country.iso_code)
+            if country.iso_code == 'TW':
+                result_key = 'TW', '台湾'
+
             if result_key not in country_outbounds:
                 country_outbounds[result_key] = []
-            country_outbounds[result_key].append(
-                outbound,
-            )
-            print(
-                f'节点 {outbound["server"]}:{outbound["server_port"]} 位于 {country.names.get("zh_CN", country.iso_code)}'
-            )
+            country_outbounds[result_key].append(outbound)
         except NoAnswer:  # 不可用
             continue
 
@@ -107,20 +98,17 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
         template['outbounds'].append(outbound)
 
 # 排序
-# template['outbounds'][0]['outbounds'].sort()
-# template['outbounds'][1]['outbounds'].sort()
-# template['outbounds'].sort(key=lambda x: x['tag'])
 template['outbounds'][0]['outbounds'].sort()
 for test_index in test_indexs:
     template['outbounds'][test_index]['outbounds'].sort()
 template['outbounds'].sort(key=lambda x: x['tag'])
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
-    f.write("""| 类型 | 节点数量 |
+    f.write("""| 国家 | 节点数量 |
 | ---- | -------- |
 """)
-    for tag, outbound in country_outbounds.items():
-        f.write(f'| {tag} | {len(outbound)} |\n')
+    for (_, country_name), outbound in country_outbounds.items():
+        f.write(f'| {country_name} | {len(outbound)} |\n')
 
 with open('./result.json', 'w', encoding='utf-8') as f:
     f.write(json.dumps(template, indent=4, ensure_ascii=False))
