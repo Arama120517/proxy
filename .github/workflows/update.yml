@@ -37,6 +37,6 @@ jobs:
 
             - name: 发布
               run: |
-                  TAG=$(date +'%Y-%m-%d')
                   TITLE=$(date +'%Y年%m月%d日')
-                  gh release create "$TAG" --title "$TITLE" --notes-file ./release_notes.md result.json
+                  gh release delete --cleanup-tag -y "release" || true
+                  gh release create "result" --title "$TITLE" --notes-file ./release_notes.md result.json
