@@ -168,3 +168,4 @@ cython_debug/
 /*.json
 /release_notes.md
 /Country.mmdb
+/results

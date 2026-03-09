@@ -76,28 +76,18 @@
       "domain_strategy": "prefer_ipv4",
       "inet4_address": "172.16.0.1/30",
       "inet6_address": "2001:0470:f9da:fdfa::1/64",
-      "mtu": 9000,
+      "mtu": 1400,
       "auto_route": true,
       "strict_route": true,
-      "endpoint_independent_nat": true
+      "endpoint_independent_nat": true,
+      "stack": "system"
     }
   ],
   "outbounds": [
     {
       "type": "selector",
       "tag": "select",
-      "outbounds": ["url-test"],
-      "default": "url-test"
-    },
-    {
-      "type": "urltest",
-      "tag": "url-test",
-      "outbounds": [],
-      "url": "http://cp.cloudflare.com/generate_204",
-      "interval": "45s",
-      "tolerance": 25,
-      "idle_timeout": "12m",
-      "interrupt_exist_connections": true
+      "outbounds": []
     },
     {
       "type": "direct",
