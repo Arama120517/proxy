@@ -58,7 +58,10 @@ with Reader('Country.mmdb') as geo_reader:
 test_indexs: list[int] = [1]
 for (country_iso_code, country_name), outbounds in country_outbounds.items():
     flag_emoji = (
-        ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
+        ''.join(
+            chr(0x1F1E6 + ord(c) - ord('A'))
+            for c in ('CN' if country_iso_code == 'TW' else country_iso_code).upper()
+        )
         if len(country_iso_code) == 2
         else '🌐'
     )
