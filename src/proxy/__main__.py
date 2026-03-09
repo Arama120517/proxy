@@ -58,7 +58,9 @@ for country, outbounds in list(country_outbounds.items()):
         del country_outbounds[country]
 
 if other_outbounds:
-    country_outbounds[Country(iso_code='OTHER', names={'zh_CN': '其他'})] = other_outbounds
+    country_outbounds[Country(locales=['zh_CN'], iso_code='OTHER', names={'zh_CN': '其他'})] = (
+        other_outbounds
+    )
 
 # 添加到模板
 for country, outbounds in country_outbounds.items():
@@ -69,10 +71,11 @@ for country, outbounds in country_outbounds.items():
     )
     country_name = country.names.get('zh_CN', country.iso_code)
 
+    test_tag = f'{flag_emoji}{country_name}'
     template['outbounds'].append(
         {
             'type': 'urltest',
-            'tag': f'{flag_emoji}{country_name}',
+            'tag': test_tag,
             'outbounds': [],
             'url': 'http://cp.cloudflare.com/generate_204',
             'interval': '45s',
@@ -81,7 +84,7 @@ for country, outbounds in country_outbounds.items():
             'interrupt_exist_connections': True,
         },
     )
-    template['outbounds'][0]['outbounds'].append(f'{country}-test')
+    template['outbounds'][0]['outbounds'].append(test_tag)
     test_index = len(template['outbounds']) - 1
 
     for i, outbound in enumerate(outbounds, start=1):
