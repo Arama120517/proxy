@@ -1,9 +1,9 @@
 import json
-import logging
 from ipaddress import ip_address
 
 from dns.resolver import NoAnswer, Resolver
 from geoip2.database import Reader
+from geoip2.records import Country
 
 from proxy import OutBounds, load_result
 
@@ -11,7 +11,7 @@ with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
 
-country_outbounds: dict[str, OutBounds] = {}
+country_outbounds: dict[Country, OutBounds] = {}
 seen_keys: dict[str, set[str]] = {}
 
 # 筛选可用的节点并按照国家分类
@@ -33,33 +33,41 @@ with Reader('Country.mmdb') as geo_reader:
                     # 可能是IPv6地址
                     ip = str(resolver.resolve(ip, 'AAAA')[0])
 
-            response = geo_reader.country(ip)
+            country: Country = geo_reader.country(ip).country
 
-            country_code = response.country.iso_code
-            if country_code == 'CN':
+            if country.iso_code == 'CN':
                 continue
 
             dedup_key = json.dumps(outbound, sort_keys=True, ensure_ascii=False)
 
-            if country_code not in seen_keys:
-                seen_keys[country_code] = set()
-            if dedup_key in seen_keys[country_code]:
+            if country.iso_code not in seen_keys:
+                seen_keys[country.iso_code] = set()
+            if dedup_key in seen_keys[country.iso_code]:
                 continue  # 重复，跳过
-            seen_keys[country_code].add(dedup_key)
+            seen_keys[country.iso_code].add(dedup_key)
 
-            country_outbounds.setdefault(country_code, []).append(outbound)
+            country_outbounds.setdefault(country, [outbound])
         except NoAnswer:  # 不可用
-            continue
-        except Exception:
-            logging.exception('获取节点失败')
             continue
 
 # 添加到模板
-for country_code, outbounds in country_outbounds.items():
+others_outbounds: OutBounds = []
+for country, outbounds in country_outbounds.items():
+    if len(outbounds) < 3:
+        others_outbounds += outbounds
+        continue
+
+    flag_emoji = (
+        ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country.iso_code.upper())
+        if len(country.iso_code) == 2
+        else '🌐'
+    )
+    country_name = country.names.get('zh_CN', country.iso_code)
+
     template['outbounds'].append(
         {
             'type': 'urltest',
-            'tag': f'{country_code}-test',
+            'tag': f'{flag_emoji}{country_name}',
             'outbounds': [],
             'url': 'http://cp.cloudflare.com/generate_204',
             'interval': '45s',
@@ -68,16 +76,11 @@ for country_code, outbounds in country_outbounds.items():
             'interrupt_exist_connections': True,
         },
     )
-    template['outbounds'][0]['outbounds'].append(f'{country_code}-test')
+    template['outbounds'][0]['outbounds'].append(f'{country}-test')
     test_index = len(template['outbounds']) - 1
 
     for i, outbound in enumerate(outbounds, start=1):
-        flag_emoji = (
-            ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_code.upper())
-            if country_code and len(country_code) == 2
-            else '🌐'
-        )
-        tag: str = f'{flag_emoji} | {country_code} | [{outbound["type"]}]-{i}'
+        tag: str = f'{flag_emoji}{country_name} | [{outbound["type"]}]-{i}'
         outbound['tag'] = tag
         template['outbounds'][test_index]['outbounds'].append(tag)
         template['outbounds'].append(outbound)
