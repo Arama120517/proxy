@@ -46,7 +46,7 @@ with Reader('Country.mmdb') as geo_reader:
 
             result_key = country.iso_code, country.names.get('zh-CN', country.iso_code)
             if country.iso_code == 'TW':
-                result_key = 'TW', '台湾'
+                result_key = 'CN', '中国台湾'
 
             if result_key not in country_outbounds:
                 country_outbounds[result_key] = []
@@ -58,10 +58,7 @@ with Reader('Country.mmdb') as geo_reader:
 test_indexs: list[int] = [1]
 for (country_iso_code, country_name), outbounds in country_outbounds.items():
     flag_emoji = (
-        ''.join(
-            chr(0x1F1E6 + ord(c) - ord('A'))
-            for c in ('CN' if country_iso_code == 'TW' else country_iso_code).upper()
-        )
+        ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
         if len(country_iso_code) == 2
         else '🌐'
     )
@@ -74,7 +71,7 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
             'outbounds': [],
             'url': 'http://cp.cloudflare.com/generate_204',
             'interval': '45s',
-            'tolerance': 25,
+            'tolerance': 50,
             'idle_timeout': '12m',
             'interrupt_exist_connections': True,
         },
@@ -99,7 +96,7 @@ template['outbounds'].sort(key=lambda x: x['tag'])
 
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
-    f.write("""| 国家 | 节点数量 |
+    f.write("""| 地区 | 节点数量 |
 | ---- | -------- |
 """)
     for (_, country_name), outbound in country_outbounds.items():
