@@ -50,13 +50,18 @@ with Reader('Country.mmdb') as geo_reader:
         except NoAnswer:  # 不可用
             continue
 
-# 添加到模板
-others_outbounds: OutBounds = []
-for country, outbounds in country_outbounds.items():
-    if len(outbounds) < 3:
-        others_outbounds += outbounds
-        continue
+# 合并数量较小的国家到“其他”
+other_outbounds: OutBounds = []
+for country, outbounds in list(country_outbounds.items()):
+    if len(outbounds) < 5:
+        other_outbounds.extend(outbounds)
+        del country_outbounds[country]
 
+if other_outbounds:
+    country_outbounds[Country(iso_code='OTHER', names={'zh_CN': '其他'})] = other_outbounds
+
+# 添加到模板
+for country, outbounds in country_outbounds.items():
     flag_emoji = (
         ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country.iso_code.upper())
         if len(country.iso_code) == 2
@@ -84,6 +89,7 @@ for country, outbounds in country_outbounds.items():
         outbound['tag'] = tag
         template['outbounds'][test_index]['outbounds'].append(tag)
         template['outbounds'].append(outbound)
+
 # 排序
 # template['outbounds'][0]['outbounds'].sort()
 # template['outbounds'][1]['outbounds'].sort()
