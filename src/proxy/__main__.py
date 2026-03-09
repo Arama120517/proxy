@@ -1,4 +1,5 @@
 import json
+import socket
 from ipaddress import ip_address
 
 from dns.resolver import NoAnswer, Resolver
@@ -11,8 +12,16 @@ with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
 
-country_outbounds: dict[Country, OutBounds] = {}
-seen_keys: dict[str, set[str]] = {}
+def get_result_key(country: Country) -> tuple[str, str]:
+    if country.iso_code == 'TW':
+        return 'TW', '台湾'
+    return country.iso_code, country.names.get('zh_CN', country.iso_code)
+
+
+country_outbounds: dict[tuple[str, str], OutBounds] = {}
+other_outbounds: OutBounds = []
+
+seen_keys: set[str] = set()
 
 # 筛选可用的节点并按照国家分类
 with Reader('Country.mmdb') as geo_reader:
@@ -20,56 +29,59 @@ with Reader('Country.mmdb') as geo_reader:
     for outbound in load_result():
         try:
             outbound.pop('tag', None)
+
+            dedup_key = json.dumps(outbound, sort_keys=True, ensure_ascii=False)
+            if dedup_key in seen_keys:
+                continue
+            seen_keys.add(dedup_key)
+
             if outbound['type'] == 'anytls':
                 continue
             ip = outbound['server']
 
             try:
-                ip_address(ip)
+                ip_address(address=ip)
             except ValueError:
                 try:
-                    ip = str(resolver.resolve(ip, 'A')[0])
-                except (NoAnswer, Exception):
-                    # 可能是IPv6地址
-                    ip = str(resolver.resolve(ip, 'AAAA')[0])
+                    ip = socket.gethostbyname(ip)
+                except socket.gaierror:
+                    other_outbounds.append(outbound)
+                    continue
 
             country: Country = geo_reader.country(ip).country
 
             if country.iso_code == 'CN':
                 continue
 
-            dedup_key = json.dumps(outbound, sort_keys=True, ensure_ascii=False)
-
-            if country.iso_code not in seen_keys:
-                seen_keys[country.iso_code] = set()
-            if dedup_key in seen_keys[country.iso_code]:
-                continue  # 重复，跳过
-            seen_keys[country.iso_code].add(dedup_key)
-
-            country_outbounds.setdefault(country, [outbound])
+            result_key = get_result_key(country)
+            if result_key not in country_outbounds:
+                country_outbounds[result_key] = []
+            country_outbounds[result_key].append(
+                outbound,
+            )
+            print(
+                f'节点 {outbound["server"]}:{outbound["server_port"]} 位于 {country.names.get("zh_CN", country.iso_code)}'
+            )
         except NoAnswer:  # 不可用
             continue
 
 # 合并数量较小的国家到“其他”
-other_outbounds: OutBounds = []
-for country, outbounds in list(country_outbounds.items()):
+for (country_iso_code, country_name), outbounds in list(country_outbounds.items()):
     if len(outbounds) < 5:
         other_outbounds.extend(outbounds)
-        del country_outbounds[country]
+        del country_outbounds[(country_iso_code, country_name)]
 
 if other_outbounds:
-    country_outbounds[Country(locales=['zh_CN'], iso_code='OTHER', names={'zh_CN': '其他'})] = (
-        other_outbounds
-    )
+    country_outbounds['OTHER', '其他'] = other_outbounds
 
 # 添加到模板
-for country, outbounds in country_outbounds.items():
+test_indexs: list[int] = []
+for (country_iso_code, country_name), outbounds in country_outbounds.items():
     flag_emoji = (
-        ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country.iso_code.upper())
-        if len(country.iso_code) == 2
+        ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
+        if len(country_iso_code) == 2
         else '🌐'
     )
-    country_name = country.names.get('zh_CN', country.iso_code)
 
     test_tag = f'{flag_emoji}{country_name}'
     template['outbounds'].append(
@@ -86,6 +98,7 @@ for country, outbounds in country_outbounds.items():
     )
     template['outbounds'][0]['outbounds'].append(test_tag)
     test_index = len(template['outbounds']) - 1
+    test_indexs.append(test_index)
 
     for i, outbound in enumerate(outbounds, start=1):
         tag: str = f'{flag_emoji}{country_name} | [{outbound["type"]}]-{i}'
@@ -97,6 +110,10 @@ for country, outbounds in country_outbounds.items():
 # template['outbounds'][0]['outbounds'].sort()
 # template['outbounds'][1]['outbounds'].sort()
 # template['outbounds'].sort(key=lambda x: x['tag'])
+template['outbounds'][0]['outbounds'].sort()
+for test_index in test_indexs:
+    template['outbounds'][test_index]['outbounds'].sort()
+template['outbounds'].sort(key=lambda x: x['tag'])
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 类型 | 节点数量 |
