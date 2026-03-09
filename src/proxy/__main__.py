@@ -12,7 +12,6 @@ with open('./src/template.json', 'r', encoding='utf-8') as f:
     template: dict = json.loads(f.read())
 
 country_outbounds: dict[tuple[str, str], OutBounds] = {}
-other_outbounds: OutBounds = []
 
 seen_keys: set[str] = set()
 
@@ -38,7 +37,6 @@ with Reader('Country.mmdb') as geo_reader:
                 try:
                     ip = socket.gethostbyname(ip)
                 except socket.gaierror:
-                    other_outbounds.append(outbound)
                     continue
 
             country: Country = geo_reader.country(ip).country
@@ -56,17 +54,8 @@ with Reader('Country.mmdb') as geo_reader:
         except NoAnswer:  # 不可用
             continue
 
-# 合并数量较小的国家到“其他”
-for (country_iso_code, country_name), outbounds in list(country_outbounds.items()):
-    if len(outbounds) < 5:
-        other_outbounds.extend(outbounds)
-        del country_outbounds[(country_iso_code, country_name)]
-
-if other_outbounds:
-    country_outbounds['OTHER', '其他'] = other_outbounds
-
 # 添加到模板
-test_indexs: list[int] = []
+test_indexs: list[int] = [1]
 for (country_iso_code, country_name), outbounds in country_outbounds.items():
     flag_emoji = (
         ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
@@ -88,11 +77,12 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
         },
     )
     template['outbounds'][0]['outbounds'].append(test_tag)
+    template['outbounds'][1]['outbounds'].append(test_tag)
     test_index = len(template['outbounds']) - 1
     test_indexs.append(test_index)
 
     for i, outbound in enumerate(outbounds, start=1):
-        tag: str = f'{flag_emoji}{country_name} | [{outbound["type"]}]-{i}'
+        tag: str = f'[{flag_emoji}{country_name}]-{i} | [{outbound["type"]}]'
         outbound['tag'] = tag
         template['outbounds'][test_index]['outbounds'].append(tag)
         template['outbounds'].append(outbound)
@@ -101,7 +91,9 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
 template['outbounds'][0]['outbounds'].sort()
 for test_index in test_indexs:
     template['outbounds'][test_index]['outbounds'].sort()
+template['outbounds'][0]['outbounds'].insert(0, '🌐全部')
 template['outbounds'].sort(key=lambda x: x['tag'])
+
 
 with open('./release_notes.md', 'w', encoding='utf-8') as f:
     f.write("""| 国家 | 节点数量 |

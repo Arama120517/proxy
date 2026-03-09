@@ -5,6 +5,9 @@ on:
     - cron: "45 2 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
   JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
@@ -54,8 +57,6 @@ jobs:
   pack:
     needs: get_outbounds
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v7

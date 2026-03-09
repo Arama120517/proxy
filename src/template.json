@@ -87,7 +87,18 @@
     {
       "type": "selector",
       "tag": "select",
-      "outbounds": []
+      "outbounds": [],
+      "default": "🌐全部"
+    },
+    {
+      "type": "urltest",
+      "tag": "🌐全部",
+      "outbounds": [],
+      "url": "http://cp.cloudflare.com/generate_204",
+      "interval": "45s",
+      "tolerance": 25,
+      "idle_timeout": "12m",
+      "interrupt_exist_connections": true
     },
     {
       "type": "direct",
