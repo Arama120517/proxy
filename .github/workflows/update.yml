@@ -18,7 +18,7 @@ jobs:
               run: |
                   mkdir -p results
                   wget -q https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
-                  echo $GITHUB_TOKEN | gh auth login --with-token
+                  echo ${{ github.token }} | gh auth login --with-token
                   uv sync --no-dev
 
             - name: 获取节点
