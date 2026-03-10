@@ -26,6 +26,7 @@ jobs:
         env:
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
           JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
+          IPINFO_TOKEN: ${{ secrets.IPINFO_TOKEN }}
         run: |
           pids=()
           

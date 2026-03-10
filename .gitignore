@@ -166,6 +166,7 @@ cython_debug/
 
 # Project
 /*.json
+/*.mmdb
+/*.csv
 /release_notes.md
-/Country.mmdb
 /results

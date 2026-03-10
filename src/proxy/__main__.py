@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 import socket
 from ipaddress import ip_address
 
@@ -18,7 +19,7 @@ country_outbounds: dict[tuple[str, str], OutBounds] = {}
 seen_keys: set[str] = set()
 
 # 筛选可用的节点并按照国家分类
-with Reader('db.mmdb', locales='zh-CN') as geo_reader:
+with Reader('db.mmdb') as geo_reader:
     resolver = Resolver()
     for outbound in load_result():
         try:
@@ -43,9 +44,13 @@ with Reader('db.mmdb', locales='zh-CN') as geo_reader:
 
             try:
                 country: Country = geo_reader.country(ip).country
-                result_key = country.iso_code, country.name
+                result_key = country.iso_code, country.names.get('zh-CN', country.iso_code)
             except AddressNotFoundError:  # 数据库里没有
-                iso_code = get_session().get(f'https://api.country.is/{ip}').json()['country']
+                iso_code = (
+                    get_session()
+                    .get(f'https://api.ipinfo.io/lite/{ip}?token={os.environ["IPINFO_TOKEN"]}')
+                    .json()['country']
+                )
                 with open('./locales.csv', 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
@@ -68,9 +73,6 @@ with Reader('db.mmdb', locales='zh-CN') as geo_reader:
 # 添加到模板
 test_indexs: list[int] = [1]
 for (country_iso_code, country_name), outbounds in country_outbounds.items():
-    if not country_name:
-        country_name = country_iso_code
-
     flag_emoji = (
         ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
         if len(country_iso_code) == 2
