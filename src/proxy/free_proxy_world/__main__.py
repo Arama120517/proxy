@@ -37,7 +37,7 @@ while total_minutes < 30:
         if not cols or len(cols) < 8:  # 确保至少有 8 列
             continue
 
-        if int(get_href_param(cols[4].find('a'), 'speed')) > 300:
+        if int(get_href_param(cols[4].find('a'), 'speed')) > 500:
             continue
 
         for value, unit in re.findall(r'(\d+)\s*([dh]\.?|minutes)', cols[7].get_text(strip=True)):
