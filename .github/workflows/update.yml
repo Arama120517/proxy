@@ -26,7 +26,6 @@ jobs:
         env:
           JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
           JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
-          IPINFO_TOKEN: ${{ secrets.IPINFO_TOKEN }}
         run: |
           pids=()
           
@@ -45,6 +44,8 @@ jobs:
           done
 
       - name: 合并结果
+        env:
+          IPINFO_TOKEN: ${{ secrets.IPINFO_TOKEN }}
         run: uv run --no-dev -m proxy
 
       - name: 发布
