@@ -37,7 +37,7 @@ while total_minutes < 30:
         if not cols or len(cols) < 8:  # 确保至少有 8 列
             continue
 
-        if int(get_href_param(cols[4].find('a'), 'speed')) > 1000:
+        if int(get_href_param(cols[4].find('a'), 'speed')) > 300:
             continue
 
         for value, unit in re.findall(r'(\d+)\s*([dh]\.?|minutes)', cols[7].get_text(strip=True)):
@@ -48,7 +48,7 @@ while total_minutes < 30:
                 total_minutes += val * 60
             elif 'minutes' in unit:
                 total_minutes += val
-        if total_minutes > 30:
+        if total_minutes > 60:
             break
 
         if get_href_param(cols[2].find('a'), 'country') == 'CN':
@@ -73,10 +73,11 @@ while total_minutes < 30:
                 }
             case 'socks5':
                 result['type'] = 'socks'
-                result['version'] = 5
+                result['version'] = '5'
+                result['udp'] = True
             case 'socks4':
                 result['type'] = 'socks'
-                result['version'] = 4
+                result['version'] = '4'
 
         results.append(result)
     index += 1
