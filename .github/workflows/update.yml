@@ -17,7 +17,7 @@ jobs:
       - name: 初始化
         run: |
           mkdir -p results
-          wget -q https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
+          wget -q https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country-without-asn.mmdb -O Country.mmdb
           echo ${{ github.token }} | gh auth login --with-token
           uv sync --no-dev
 
