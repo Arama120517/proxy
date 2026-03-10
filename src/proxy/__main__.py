@@ -54,10 +54,10 @@ with Reader('db.mmdb') as geo_reader:
                 with open('./locales.csv', 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
-                        if row['country_iso_code'] == iso_code:
-                            break
-                result_key = iso_code, row['country_name']
-
+                        if row['country_iso_code'] != iso_code:
+                            continue
+                        result_key = iso_code, row['country_name']
+                        break
             if country.iso_code == 'CN':
                 continue
 
