@@ -45,11 +45,7 @@ with Reader('db.mmdb', locales='zh-CN') as geo_reader:
                 country: Country = geo_reader.country(ip).country
                 result_key = country.iso_code, country.name
             except AddressNotFoundError:  # 数据库里没有
-                iso_code = (
-                    get_session()
-                    .get(f'http://ip-api.com/json/{ip}?fields=countryCode')
-                    .json()['countryCode']
-                )
+                iso_code = get_session().get(f'https://api.country.is/{ip}').json()['country']
                 with open('./locales.csv', 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     for row in reader:
