@@ -79,7 +79,6 @@ while total_minutes < 30:
                 result['version'] = 4
 
         results.append(result)
-        print(result)
     index += 1
 
 dump_result(results)

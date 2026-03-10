@@ -9,7 +9,6 @@ dependencies = [
     "dnspython>=2.7.0",
     "geoip2>=5.2.0",
     "requests>=2.32.3",
-    "ruff==0.15.5",
     "ua-generator>=2.0.5",
 ]
 
