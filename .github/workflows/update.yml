@@ -40,7 +40,6 @@ jobs:
           # 等待所有进程完成，单个失败不影响整体
           for pid in "${pids[@]}"; do
               wait $pid || true
-              echo "✅ $name"
           done
 
       - name: 合并结果

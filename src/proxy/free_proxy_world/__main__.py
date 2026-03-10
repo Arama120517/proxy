@@ -1,4 +1,5 @@
 import re
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
@@ -53,21 +54,23 @@ while total_minutes < 30:
         if get_href_param(cols[2].find('a'), 'country') == 'CN':
             continue
 
-        result = {
+        result: dict[str, Any] = {
             'server': cols[0].get_text(strip=True),
             'server_port': int(get_href_param(cols[1].find('a'), 'port')),
-            'tls': {
-                'enabled': True,
-                'insecure': True,
-                'utls': {
-                    'fingerprint': 'chrome',
-                },
-            },
         }
 
         match get_href_param(cols[5].find('a'), 'type'):
             case 'http':
                 result['type'] = 'http'
+            case 'https':
+                result['type'] = 'http'
+                result['tls'] = {
+                    'enabled': True,
+                    'insecure': True,
+                    'utls': {
+                        'fingerprint': 'chrome',
+                    },
+                }
             case 'socks5':
                 result['type'] = 'socks'
                 result['version'] = 5
@@ -76,6 +79,7 @@ while total_minutes < 30:
                 result['version'] = 4
 
         results.append(result)
+        print(result)
     index += 1
 
 dump_result(results)
