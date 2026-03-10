@@ -1,42 +1,53 @@
 name: 自动更新
 
 on:
-    schedule:
-        - cron: "45 2 * * *"
-    workflow_dispatch:
+  schedule:
+    - cron: "45 2 * * *"
+  workflow_dispatch:
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - uses: actions/checkout@v6
-            - uses: astral-sh/setup-uv@v7
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
 
-            - name: 初始化
-              run: |
-                  mkdir -p results
-                  wget -q https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
-                  echo ${{ github.token }} | gh auth login --with-token
-                  uv sync --no-dev
+      - name: 初始化
+        run: |
+          mkdir -p results
+          wget -q https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb -O Country.mmdb
+          echo ${{ github.token }} | gh auth login --with-token
+          uv sync --no-dev
 
-            - name: 获取节点
-              env:
-                  JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
-                  JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
-              run: |
-                  for mod in ./src/proxy/*/; do
-                      name=$(basename "$mod")
-                      echo "▶️ $name"
-                      uv run --no-dev -m proxy."$name" && mv result.json "results/${name}.json" || true
-                  done
+      - name: 获取节点
+        env:
+          JEGOCLOUD_USERNAME: ${{ secrets.JEGOCLOUD_USERNAME }}
+          JEGOCLOUD_PASSWORD: ${{ secrets.JEGOCLOUD_PASSWORD }}
+        run: |
+          pids=()
+          
+          for mod in ./src/proxy/*/; do
+              name=$(basename "$mod")
+              echo "▶️ $name"
+          
+              # 后台执行，不限制并发
+              uv run --no-dev -m proxy."$name" > "results/${name}.json" 2>&1 &
+              pids+=($!)
+          done
+          
+          # 等待所有进程完成，单个失败不影响整体
+          for pid in "${pids[@]}"; do
+              wait $pid || true
+              echo "✅ $name"
+          done
 
-            - name: 合并结果
-              run: uv run --no-dev -m proxy
+      - name: 合并结果
+        run: uv run --no-dev -m proxy
 
-            - name: 发布
-              run: |
-                  TITLE=$(date +'%Y年%m月%d日')
-                  gh release delete --cleanup-tag -y "result" || true
-                  gh release create "result" --title "$TITLE" --notes-file ./release_notes.md result.json
+      - name: 发布
+        run: |
+          TITLE=$(date +'%Y年%m月%d日')
+          gh release delete --cleanup-tag -y "result" || true
+          gh release create "result" --title "$TITLE" --notes-file ./release_notes.md result.json

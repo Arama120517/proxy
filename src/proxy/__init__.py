@@ -38,8 +38,7 @@ def load_result() -> OutBounds:
 
 def dump_result(outbounds: OutBounds) -> None:
     results = []
-    with Path('./result.json').open('w', encoding='utf-8') as f:
-        for outbound in outbounds:
-            if 'server' in outbound:
-                results.append(outbound)
-        json.dump(results, f, ensure_ascii=False)
+    for outbound in outbounds:
+        if 'server' in outbound:
+            results.append(outbound)
+    print(json.dumps(results, ensure_ascii=False))

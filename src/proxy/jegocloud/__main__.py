@@ -42,10 +42,9 @@ if not data:
     raise RuntimeError('正则表达式没有匹配到任何节点')
 
 results: OutBounds = []
-for index, (host, port) in enumerate(data, start=1):
+for host, port in data:
     results.append({
         'type': 'http',
-        'tag': f'jegocloud_{index}',
         'server': host,
         'server_port': int(port),
         'tls': {
