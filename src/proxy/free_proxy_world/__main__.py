@@ -48,7 +48,7 @@ while total_minutes < 30:
                 total_minutes += val * 60
             elif 'minutes' in unit:
                 total_minutes += val
-        if total_minutes > 60:
+        if total_minutes > 120:
             break
 
         if get_href_param(cols[2].find('a'), 'country') == 'CN':
