@@ -74,7 +74,6 @@ while total_minutes < 30:
             case 'socks5':
                 result['type'] = 'socks'
                 result['version'] = '5'
-                result['udp'] = True
             case 'socks4':
                 result['type'] = 'socks'
                 result['version'] = '4'
