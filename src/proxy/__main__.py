@@ -44,9 +44,14 @@ with Reader('db.mmdb') as geo_reader:
 
             try:
                 country: Country = geo_reader.country(ip).country
-                result_key = country.iso_code, country.names.get('zh-CN', country.iso_code)
+                result_key: tuple[str, str] = (
+                    country.iso_code or '未知',
+                    country.names.get('zh-CN', '未知'),
+                )
+                if '未知' in result_key:
+                    continue
             except AddressNotFoundError:  # 数据库里没有
-                iso_code = (
+                iso_code: str = (
                     get_session()
                     .get(f'https://api.ipinfo.io/lite/{ip}?token={os.environ["IPINFO_TOKEN"]}')
                     .json()['country']
@@ -71,7 +76,7 @@ with Reader('db.mmdb') as geo_reader:
             continue
 
 # 添加到模板
-test_indexs: list[int] = [1]
+test_indexes: list[int] = [1]
 for (country_iso_code, country_name), outbounds in country_outbounds.items():
     flag_emoji = (
         ''.join(chr(0x1F1E6 + ord(c) - ord('A')) for c in country_iso_code.upper())
@@ -95,7 +100,7 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
     template['outbounds'][0]['outbounds'].append(test_tag)
     template['outbounds'][1]['outbounds'].append(test_tag)
     test_index = len(template['outbounds']) - 1
-    test_indexs.append(test_index)
+    test_indexes.append(test_index)
 
     for i, outbound in enumerate(outbounds, start=1):
         tag: str = f'[{flag_emoji}{country_name}]-{i} | [{outbound["type"]}]'
@@ -105,7 +110,7 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
 
 # 排序
 template['outbounds'][0]['outbounds'].sort()
-for test_index in test_indexs:
+for test_index in test_indexes:
     template['outbounds'][test_index]['outbounds'].sort()
 template['outbounds'][0]['outbounds'].insert(0, '🌐全部')
 template['outbounds'].sort(key=lambda x: x['tag'])

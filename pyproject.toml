@@ -3,7 +3,7 @@ name = "proxy"
 version = "1.0.0"
 description = "自动获取代理服务器"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "beautifulsoup4>=4.13.4",
     "dnspython>=2.7.0",
@@ -13,10 +13,14 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["python-dotenv", "ruff"]
+dev = [
+    "dotenv>=0.9.9",
+    "ruff>=0.15.5",
+    "ty>=0.0.22",
+]
 
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]

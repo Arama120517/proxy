@@ -1,22 +1,22 @@
 import re
 
 from bs4 import BeautifulSoup
-from requests import HTTPError, Response
+from requests import HTTPError, Response, Session
 
 from proxy import OutBounds, dump_result, get_session
 
-session: Response = get_session()
+session: Session = get_session()
 
 response: Response = session.get('https://www.freeclashnode.com')
 response.raise_for_status()
 
-response: Response = session.get(
-    'https://www.freeclashnode.com/'
-    + BeautifulSoup(response.text, 'html.parser').find_all(
-        'a',
-        class_='list-image-box',
-    )[0]['href']
-)
+# 获取最新的页面
+page: str = BeautifulSoup(response.text, 'html.parser').find_all(
+    'a',
+    class_='list-image-box',
+)[0]['href']  # ty:ignore[invalid-assignment]
+
+response: Response = session.get(f'https://www.freeclashnode.com/{page}')
 response.raise_for_status()
 
 results: OutBounds = []

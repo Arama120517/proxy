@@ -67,9 +67,7 @@ while total_minutes < 30:
                 result['tls'] = {
                     'enabled': True,
                     'insecure': True,
-                    'utls': {
-                        'fingerprint': 'chrome',
-                    },
+                    'utls': {'enabled': True, 'fingerprint': 'chrome'},
                 }
             case 'socks5':
                 result['type'] = 'socks'

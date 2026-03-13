@@ -50,9 +50,7 @@ for host, port in data:
         'tls': {
             'enabled': True,
             'insecure': True,
-            'utls': {
-                'fingerprint': 'chrome',
-            },
+            'utls': {'enabled': True, 'fingerprint': 'chrome'},
         },
     })
 
