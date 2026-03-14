@@ -135,6 +135,18 @@
         "outbound": "reject"
       },
       {
+        "rule_set": "geosite-apple",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "geosite-microsoft",
+        "outbound": "direct"
+      },
+      {
+        "rule_set": "geosite-steam",
+        "outbound": "direct"
+      },
+      {
         "rule_set": "geoip-cn",
         "outbound": "direct"
       },
@@ -143,8 +155,8 @@
         "outbound": "direct"
       },
       {
-        "outbound": "direct",
-        "ip_is_private": true
+        "ip_is_private": true,
+        "outbound": "direct"
       },
       {
         "rule_set": "geosite-geolocation-!cn",
@@ -156,32 +168,56 @@
         "type": "remote",
         "tag": "geoip-cn",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
-        "download_detour": "select",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+        "download_detour": "direct",
         "update_interval": "1d"
       },
       {
         "type": "remote",
         "tag": "geosite-cn",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
-        "download_detour": "select",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-cn.srs",
+        "download_detour": "direct",
         "update_interval": "1d"
       },
       {
         "type": "remote",
         "tag": "geosite-geolocation-!cn",
         "format": "binary",
-        "url": "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/geolocation-!cn.srs",
-        "download_detour": "select",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geolocation-!cn.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-apple",
+        "format": "binary",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-apple.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-microsoft",
+        "format": "binary",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-microsoft.srs",
+        "download_detour": "direct",
+        "update_interval": "1d"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-steam",
+        "format": "binary",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-steam.srs",
+        "download_detour": "direct",
         "update_interval": "1d"
       },
       {
         "type": "remote",
         "tag": "geosite-category-ads-all",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ads-all.srs",
-        "download_detour": "select",
+        "url": "https://v6.gh-proxy.com/https://raw.githubusercontent.com//SagerNet/sing-geosite/rule-set/geosite-category-ads-all.srs",
+        "download_detour": "direct",
         "update_interval": "1d"
       }
     ],
