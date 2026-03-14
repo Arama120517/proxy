@@ -16,7 +16,7 @@ dependencies = [
 dev = [
     "dotenv>=0.9.9",
     "ruff>=0.15.5",
-    "ty>=0.0.22",
+    "ty>=0.0.23",
 ]
 
 [build-system]

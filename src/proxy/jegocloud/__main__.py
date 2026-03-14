@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -5,7 +6,7 @@ from dns.rdatatype import TXT
 from dns.resolver import Resolver
 from requests import Response, Session
 
-from proxy import OutBounds, dump_result, get_session
+from proxy import OutBound, get_session
 
 session: Session = get_session()
 
@@ -41,7 +42,7 @@ data: set[dict] = set(
 if not data:
     raise RuntimeError('正则表达式没有匹配到任何节点')
 
-results: OutBounds = []
+results: list[OutBound] = []
 for host, port in data:
     results.append({
         'type': 'http',
@@ -54,4 +55,5 @@ for host, port in data:
         },
     })
 
-dump_result(results)
+with open('./results/jegocloud.json', 'w', encoding='utf-8') as f:
+    json.dump(results, f, ensure_ascii=False, indent=4)

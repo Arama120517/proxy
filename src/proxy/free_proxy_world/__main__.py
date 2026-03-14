@@ -1,10 +1,11 @@
+import json
 import re
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
 
-from proxy import OutBounds, dump_result, get_session
+from proxy import OutBound, get_session
 
 
 def get_href_param(tag, param_name):
@@ -20,26 +21,25 @@ def get_href_param(tag, param_name):
 
 session = get_session()
 
-results: OutBounds = []
+results: list[OutBound] = []
 
-index = 1
-total_minutes = 0
-while total_minutes < 30:
+index: int = 1
+timeout: bool = False
+while not timeout:
     soup = BeautifulSoup(
-        session.get(f'https://www.freeproxy.world?page={index}').text, 'html.parser'
+        session.get(
+            f'https://www.freeproxy.world?type=&anonymity=&country=&speed=600&port=&page={index}'
+        ).text,
+        'html.parser',
     )
 
     for row in soup.find_all('tr'):
-        total_minutes = 0
-
         cols = row.find_all('td')
 
         if not cols or len(cols) < 8:  # 确保至少有 8 列
             continue
 
-        if int(get_href_param(cols[4].find('a'), 'speed')) > 500:
-            continue
-
+        total_minutes = 0
         for value, unit in re.findall(r'(\d+)\s*([dh]\.?|minutes)', cols[7].get_text(strip=True)):
             val = int(value)
             if 'd' in unit:
@@ -49,6 +49,7 @@ while total_minutes < 30:
             elif 'minutes' in unit:
                 total_minutes += val
         if total_minutes > 120:
+            timeout = True
             break
 
         if get_href_param(cols[2].find('a'), 'country') == 'CN':
@@ -79,4 +80,5 @@ while total_minutes < 30:
         results.append(result)
     index += 1
 
-dump_result(results)
+with open('./results/free_proxy_world.json', 'w', encoding='utf-8') as f:
+    json.dump(results, f, ensure_ascii=False, indent=4)

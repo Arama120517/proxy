@@ -1,9 +1,10 @@
+import json
 import re
 
 from bs4 import BeautifulSoup
 from requests import HTTPError, Response, Session
 
-from proxy import OutBounds, dump_result, get_session
+from proxy import OutBound, get_session
 
 session: Session = get_session()
 
@@ -19,7 +20,7 @@ page: str = BeautifulSoup(response.text, 'html.parser').find_all(
 response: Response = session.get(f'https://www.freeclashnode.com/{page}')
 response.raise_for_status()
 
-results: OutBounds = []
+results: list[OutBound] = []
 for item in re.findall(r'https?://[^\s<>"\']+?\.(?:yaml|json|txt)', response.text):
     try:
         response: Response = session.get(f'https://clash2sfa.xmdhs.com/sub?sub={f"{item}"}')
@@ -29,4 +30,10 @@ for item in re.findall(r'https?://[^\s<>"\']+?\.(?:yaml|json|txt)', response.tex
         if e.response.status_code >= 500:
             continue
 
-dump_result(results)
+results: list[OutBound] = []
+for result in results:
+    if 'server' not in result:
+        results.remove(result)
+
+with open('./results/free_clash_node.json', 'w', encoding='utf-8') as f:
+    json.dump(results, f, ensure_ascii=False, indent=4)
