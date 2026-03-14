@@ -49,10 +49,11 @@ with Reader('db.mmdb') as geo_reader:
                     continue
 
             need_ipinfo: bool = False
-            iso_code: str = ''
+            result_key: tuple[str | None, str | None] = None, None
+
             try:
                 country: Country = geo_reader.country(ip).country
-                iso_code = country.iso_code  # ty:ignore[invalid-assignment]
+                iso_code: str | None = country.iso_code
                 if not iso_code:
                     need_ipinfo = True
             except AddressNotFoundError:  # 数据库里没有
@@ -68,11 +69,14 @@ with Reader('db.mmdb') as geo_reader:
                 for row in reader:
                     if row['country_iso_code'] != iso_code:
                         continue
-                    result_key: tuple[str, str] = (
+                    result_key = (
                         iso_code,
-                        row['country_name'],
+                        row['country_name'] or None,
                     )
                     break
+
+            if None in result_key:
+                continue
 
             if country.iso_code == 'CN':
                 continue
@@ -81,8 +85,8 @@ with Reader('db.mmdb') as geo_reader:
                 result_key: tuple[str, str] = 'CN', '中国台湾'
 
             if result_key not in country_outbounds:
-                country_outbounds[result_key] = []
-            country_outbounds[result_key].append(outbound)
+                country_outbounds[result_key] = []  # ty:ignore[invalid-assignment]
+            country_outbounds[result_key].append(outbound)  # ty:ignore[invalid-argument-type]
         except NoAnswer:  # 不可用
             continue
 
