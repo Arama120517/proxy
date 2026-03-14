@@ -49,33 +49,34 @@ with Reader('db.mmdb') as geo_reader:
                     continue
 
             need_ipinfo: bool = False
-            result_key: tuple[str | None, str | None] = None, None
 
             try:
                 country: Country = geo_reader.country(ip).country
-                iso_code: str | None = country.iso_code
-                if not iso_code:
-                    need_ipinfo = True
+                result_key: tuple[str, str] = (
+                    country.iso_code or '未知',
+                    country.names.get('zh-CN', '未知'),
+                )
             except AddressNotFoundError:  # 数据库里没有
-                need_ipinfo = True
-            if need_ipinfo:
-                iso_code: str = (
+                result: dict = (
                     get_session()
                     .get(f'https://api.ipinfo.io/lite/{ip}?token={os.environ["IPINFO_TOKEN"]}')
-                    .json()['country']
+                    .json()
                 )
-            with open('./locales.csv', 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    if row['country_iso_code'] != iso_code:
-                        continue
-                    result_key = (
-                        iso_code,
-                        row['country_name'] or None,
-                    )
-                    break
+                if not result['country'] or not isinstance(result['country'], str):
+                    continue
+                iso_code: str = result['country']
+                with open('./locales.csv', 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        if row['country_iso_code'] != iso_code:
+                            continue
+                        result_key: tuple[str, str] = (
+                            iso_code,
+                            row['country_name'] or '未知',
+                        )
+                        break
 
-            if None in result_key:
+            if '未知' in result_key:
                 continue
 
             if country.iso_code == 'CN':
@@ -107,9 +108,9 @@ for (country_iso_code, country_name), outbounds in country_outbounds.items():
             'outbounds': [],
             'url': 'http://cp.cloudflare.com/generate_204',
             'interval': '45s',
-            'tolerance': 50,
-            'idle_timeout': '12m',
-            'interrupt_exist_connections': True,
+            'tolerance': 150,
+            'idle_timeout': '30m',
+            'interrupt_exist_connections': False,
         },
     )
     template['outbounds'][0]['outbounds'].append(test_tag)

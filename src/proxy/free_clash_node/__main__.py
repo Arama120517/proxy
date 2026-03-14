@@ -30,10 +30,5 @@ for item in re.findall(r'https?://[^\s<>"\']+?\.(?:yaml|json|txt)', response.tex
         if e.response.status_code >= 500:
             continue
 
-results: list[OutBound] = []
-for result in results:
-    if 'server' not in result:
-        results.remove(result)
-
 with open('./results/free_clash_node.json', 'w', encoding='utf-8') as f:
-    json.dump(results, f, ensure_ascii=False, indent=4)
+    json.dump([r for r in results if 'server' in r], f, ensure_ascii=False, indent=4)
