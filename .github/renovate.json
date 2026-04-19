@@ -1,32 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "dependencyDashboard": true,
-  "extends": ["config:best-practices"],
-  "rangeStrategy": "pin",
-  "prCreation": "immediate",
-  "prHourlyLimit": 0,
-  "prConcurrentLimit": 0,
-  "commitHourlyLimit": 0,
-  "semanticCommits": "enabled",
-  "timezone": "Asia/Shanghai",
-  "schedule": ["at any time"],
-  "automergeSchedule": ["at any time"],
-  "enabledManagers": ["pep621", "github-actions"],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["at any time"],
-    "automerge": true,
-    "automergeType": "branch",
-    "automergeStrategy": "rebase",
-    "ignoreTests": true
-  },
-  "packageRules": [
-    {
-      "matchUpdateTypes": ["*"],
-      "automerge": true,
-      "automergeType": "branch",
-      "automergeStrategy": "rebase",
-      "ignoreTests": true
-    }
-  ]
+  "extends": ["github>Arama120517/renovate-config"],
+  "enabledManagers": ["pep621", "github-actions"]
 }
