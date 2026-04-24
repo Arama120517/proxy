@@ -1,5 +1,4 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>Arama120517/renovate-config"],
   "enabledManagers": ["pep621", "github-actions"]
 }

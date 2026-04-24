@@ -4,9 +4,13 @@ on:
   schedule:
     - cron: "0 0 * * *"
       timezone: Asia/Shanghai
-  workflow_dispatch:
   push:
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
