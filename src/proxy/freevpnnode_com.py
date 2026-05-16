@@ -1,15 +1,15 @@
-import json
-import random
-import re
-import time
+from json import dumps
+from random import uniform
+from re import Match, match, search
+from time import sleep
 
 from bs4 import BeautifulSoup, Tag
 from bs4.element import AttributeValueList, ResultSet
 
 from proxy.utils import (
-    MAX_INDEX_NUM,
-    MAX_NO_VALID_INDEX_NUM,
-    RESULTS_DIR_PATH,
+    MAX_INDEX,
+    MAX_NO_VALID_INDEX,
+    RESULTS_DIR,
     OutBounds,
     create_outbound,
     requests_flaresolverr,
@@ -36,7 +36,7 @@ results: OutBounds = []
 index: int = 1
 no_any_valid_nodes_num: int = 0
 while (
-    no_any_valid_nodes_num <= MAX_NO_VALID_INDEX_NUM and index < MAX_INDEX_NUM
+    no_any_valid_nodes_num <= MAX_NO_VALID_INDEX and index < MAX_INDEX
 ):  # 最多3次没有任何有效节点就停止
     outbounds_num: int = len(results)
     for row in BeautifulSoup(
@@ -55,7 +55,7 @@ while (
         if not country_tag or country_tag.get_text(strip=True) == "CN":
             continue
 
-        time_str: re.Match[str] | None = re.match(
+        time_str: Match[str] | None = match(
             r"(\d+)\s*(sec|s|min|m|hour|h|hr|day|d)", cols[11].get_text(strip=True)
         )
         if not time_str:
@@ -79,7 +79,7 @@ while (
         if value * multiplier > 120:
             continue
 
-        latency_match: re.Match[str] | None = re.search(
+        latency_match: Match[str] | None = search(
             r"(\d+)", cols[10].get_text(strip=True)
         )
         latency: int | None = int(latency_match.group(1)) if latency_match else None
@@ -106,9 +106,9 @@ while (
     else:
         no_any_valid_nodes_num = 0
 
-    time.sleep(random.uniform(1, 3))
+    sleep(uniform(1, 3))
     index += 1
 
-(RESULTS_DIR_PATH / "freevpnnode_com.json").write_text(
-    json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
+(RESULTS_DIR / "freevpnnode_com.json").write_text(
+    dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
 )

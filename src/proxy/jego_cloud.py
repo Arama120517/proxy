@@ -1,11 +1,11 @@
-import json
-import os
-import re
+from json import dumps
+from os import environ
+from re import findall
 
 from dns.rdatatype import TXT
 from dns.resolver import resolve
 
-from proxy.utils import RESULTS_DIR_PATH, create_outbound, requests_flaresolverr
+from proxy.utils import RESULTS_DIR, create_outbound, requests_flaresolverr
 
 # api_url: str = (
 #     requests.get(
@@ -25,12 +25,12 @@ token: str = requests_flaresolverr(
     f"{api_url}/options/login",
     dict,
     method="POST",
-    post_data=f"username={os.environ['JEGO_CLOUD_USERNAME']}&password={os.environ['JEGO_CLOUD_PASSWORD']}",
+    post_data=f"username={environ['JEGO_CLOUD_USERNAME']}&password={environ['JEGO_CLOUD_PASSWORD']}",
 )["session"]["token"]
 
 # 获取节点ip和端口
 data: set[dict] = set(
-    re.findall(
+    findall(
         r"HTTPS\s+(?P<host>[\w.-]+\.[a-zA-Z]{2,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(?P<port>\d+)",
         requests_flaresolverr(f"{api_url}/popup?token={token}", dict)["session"][
             "proxy_settings"
@@ -40,8 +40,8 @@ data: set[dict] = set(
 if not data:
     raise ValueError("No proxy data found")
 
-(RESULTS_DIR_PATH / "jego_cloud.json").write_text(
-    json.dumps(
+(RESULTS_DIR / "jego_cloud.json").write_text(
+    dumps(
         [create_outbound(server, int(port), ["HTTPS"]) for server, port in data],
         ensure_ascii=False,
         indent=2,

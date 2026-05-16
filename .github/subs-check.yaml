@@ -22,19 +22,19 @@ check-interval: 114514
 # 保存几个成功的节点，为0代表不限制
 # 如果你的并发数量超过这个参数，那么成功的结果可能会大于这个数值
 # success-limit <= success <= success-limit+concurrent
-success-limit: 150
+success-limit: 50
 
 # 超时时间(毫秒)(节点的最大延迟)
 timeout: 1000
 # 延迟测试URL
 # 一些高级用法需要自己摸索，比如想要拒绝某些CF类节点，可将url替换为https://www.cloudflare.com
-alive-test-url: https://www.cloudflare.com
+alive-test-url: http://gstatic.com/generate_204
 # 测速地址(注意 并发数*节点速度<最大网速 否则测速结果不准确)
 # 尽量不要使用Speedtest，Cloudflare提供的下载链接，因为很多节点屏蔽测速网站
 # 如果找不到稳定的测速地址，可以自建测速地址
-speed-test-url: https://code.visualstudio.com/sha/download?build=stable&os=win32-x64
+speed-test-url: https://steamcdn-a.akamaihd.net/client/installer/SteamSetup.exe
 # 最低测速结果舍弃(KB/s)
-min-speed: 1024
+min-speed: 10240
 # 下载测试时间(s)(与下载链接大小相关，默认最大测试10s)
 download-timeout: 10
 # 单节点测速下载数据大小(MB)限制，0为不限
@@ -70,22 +70,22 @@ filter:
   # - "台湾|TW|Taiwan"           # 保留台湾节点
   #
   # === 按 IP 风险过滤（需开启 media-check 和 iprisk）===
-  - "\\|[0-4]?[0-9]%"          # 保留 IP 风险 < 50% 的节点
-  # - "\\|[0-9]%\\|"             # 保留 IP 风险 < 10% 的节点（个位数）
+  # - "\\|[0-4]?[0-9]%" # 保留 IP 风险 < 50% 的节点
+  - "\\|[0-9]%\\|" # 保留 IP 风险 < 10% 的节点（个位数）
   #
   # === 按平台解锁过滤（需开启 media-check）===
   # - "GPT⁺|GPT"                 # 保留解锁 OpenAI 的节点
   # - "NF"                       # 保留解锁 Netflix 的节点（NF=仅自制剧, NF-US=全解锁）
   # - "GM"                       # 保留解锁 Gemini 的节点
   # - "D\\+"                     # 保留解锁 Disney+ 的节点
-  - "YT-"                      # 保留解锁 YouTube Premium 的节点
-  # - "CL-"                      # 保留解锁 Claude 的节点
+  # - "YT-" # 保留解锁 YouTube Premium 的节点
+  - "CL-" # 保留解锁 Claude 的节点
   # - "SP-"                      # 保留解锁 Spotify 的节点
 
 # 是否开启流媒体检测，其中IP欺诈依赖重命名
 media-check: true
 # 流媒体检测超时时间(秒)，未设置则默认为10秒
-media-check-timeout: 5
+media-check-timeout: 10
 platforms:
   - iprisk
   - tiktok
@@ -199,9 +199,11 @@ s3-bucket-lookup: "auto"
 
 # 重试次数(获取订阅失败后重试次数)
 sub-urls-retry: 3
+# 订阅下载并发数(控制同时拉取多少个订阅链接)
+sub-urls-concurrent: 20
 # 获取订阅时使用的UA；如果设置random将会使用随机UA获取订阅
-# sub-urls-get-ua: "random"
 sub-urls-get-ua: "random"
+# sub-urls-get-ua: "clash.meta (https://github.com/beck-8/subs-check)"
 # Github Proxy，获取订阅使用，结尾要带的 /
 # github-proxy: "https://ghfast.top/"
 github-proxy: ""
@@ -212,6 +214,22 @@ github-proxy: ""
 proxy: ""
 # 符合条件节点数量的占比，低于此值会将订阅链接打印出来，用于排查质量差的订阅
 success-rate: 0
+
+# DNS 配置，支持 udp/tcp/tls/https/quic 协议
+# enable=false 走 mihomo 默认（系统 DNS + 仅 IPv4）；ipv6=true 允许 v6 解析
+# enable=true 三字段可留空，按 proxy-server-nameserver→nameserver→default-nameserver 链回落
+# default-nameserver 用作 bootstrap 必须是纯 IP
+dns:
+  enable: false
+  ipv6: false
+  nameserver:
+    - https://dns.alidns.com/dns-query
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
 # 远程订阅清单地址；用于集中维护多个订阅链接，避免频繁修改本地文件
 # 支持两种格式：
 # 1) 纯文本：按行分隔，支持 # 注释与空行
@@ -234,7 +252,7 @@ sub-urls:
   # - https://raw.githubusercontent.com/example/repo/main/config/{Ymd}.yaml
   # - https://raw.githubusercontent.com/example/repo/main/daily/daily-{Y}-{m}-{d}.yaml
   # - https://example.com/sub.txt#我是备注我是备注
-  - "http://127.0.0.1:3000"
+  - "http://127.0.0.1:8199/sub/results.yaml"
   - "https://anaer.github.io/Sub/proxies.yaml"
   - "https://free.datiya.com/uploads/{Ymd}-clash.yaml"
   - "https://node.freeclashnode.com/uploads/{Y}/{m}/0-{Ymd}.yaml"

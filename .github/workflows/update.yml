@@ -54,13 +54,14 @@ jobs:
           JEGO_CLOUD_USERNAME: ${{ secrets.JEGO_CLOUD_USERNAME }}
           JEGO_CLOUD_PASSWORD: ${{ secrets.JEGO_CLOUD_PASSWORD }}
         run: |
-          for f in $(find ${{ github.workspace }}/src/proxy -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "__main__.py" ! -name "utils.py" -printf '%f\n'); do
+          for f in $(find ${{ github.workspace }}/src/proxy -maxdepth 1 -type f -name "*.py" ! -name "__init__.py" ! -name "merge.py" ! -name "utils.py" -printf '%f\n'); do
               uv run --no-dev -m proxy."${f%.py}" &
           done
           wait || true
+          uv run --no-dev -m proxy.merge
 
       - name: 更新节点
-        run: uv run --no-dev -m proxy > /dev/null 2>&1 & sleep 2 && ${{ github.workspace }}/subs-check -f ${{ github.workspace }}/.github/subs-check.yaml || true
+        run: ${{ github.workspace }}/subs-check -f ${{ github.workspace }}/.github/subs-check.yaml || true
 
       - name: 发布
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3

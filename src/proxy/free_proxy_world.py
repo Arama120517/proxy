@@ -1,15 +1,15 @@
-import json
-import random
-import re
-import time
+from json import dumps
+from random import uniform
+from re import findall
+from time import sleep
 from urllib.parse import ParseResult, parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 from bs4.element import ResultSet
 
 from proxy.utils import (
-    MAX_INDEX_NUM,
-    RESULTS_DIR_PATH,
+    MAX_INDEX,
+    RESULTS_DIR,
     OutBounds,
     create_outbound,
     requests_flaresolverr,
@@ -28,7 +28,7 @@ results: OutBounds = []
 
 index: int = 1
 timeout: bool = False
-while not timeout and index < MAX_INDEX_NUM:
+while not timeout and index < MAX_INDEX:
     for row in BeautifulSoup(
         requests_flaresolverr(
             f"https://www.freeproxy.world?type=&anonymity=&country=&speed=600&port=&page={index}",
@@ -42,7 +42,7 @@ while not timeout and index < MAX_INDEX_NUM:
             continue
 
         total_minutes = 0
-        for value, unit in re.findall(
+        for value, unit in findall(
             r"(\d+)\s*([dh]\.?|minutes)", cols[7].get_text(strip=True)
         ):
             val = int(value)
@@ -76,9 +76,9 @@ while not timeout and index < MAX_INDEX_NUM:
             results.append(create_outbound(server, int(port), protocols))
         except ValueError:
             continue
-    time.sleep(random.uniform(1, 3))
+    sleep(uniform(1, 3))
     index += 1
 
-(RESULTS_DIR_PATH / "free_proxy_world.json").write_text(
-    json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
+(RESULTS_DIR / "free_proxy_world.json").write_text(
+    dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
 )

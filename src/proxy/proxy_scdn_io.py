@@ -1,15 +1,15 @@
-import json
-import random
-import time
 from datetime import datetime
+from json import dumps
+from random import uniform
+from time import sleep
 
 from bs4 import BeautifulSoup, Tag
 from bs4.element import ResultSet
 
 from proxy.utils import (
-    MAX_INDEX_NUM,
-    MAX_NO_VALID_INDEX_NUM,
-    RESULTS_DIR_PATH,
+    MAX_INDEX,
+    MAX_NO_VALID_INDEX,
+    RESULTS_DIR,
     OutBounds,
     create_outbound,
     requests_flaresolverr,
@@ -21,7 +21,7 @@ now: datetime = datetime.now()
 index: int = 1
 no_any_valid_nodes_num: int = 0
 while (
-    no_any_valid_nodes_num <= MAX_NO_VALID_INDEX_NUM and index < MAX_INDEX_NUM
+    no_any_valid_nodes_num <= MAX_NO_VALID_INDEX and index < MAX_INDEX
 ):  # 最多3次没有任何有效节点就停止
     outbounds_num: int = len(results)
     for row in BeautifulSoup(
@@ -63,9 +63,9 @@ while (
     else:
         no_any_valid_nodes_num = 0
 
-    time.sleep(random.uniform(1, 3))
+    sleep(uniform(1, 3))
     index += 1
 
-(RESULTS_DIR_PATH / "proxy_scdn_io.json").write_text(
-    json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
+(RESULTS_DIR / "proxy_scdn_io.json").write_text(
+    dumps(results, ensure_ascii=False, indent=2), encoding="utf-8"
 )

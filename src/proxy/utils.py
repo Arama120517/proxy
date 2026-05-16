@@ -1,31 +1,20 @@
-import json
 from ipaddress import ip_address
+from json import loads
 from pathlib import Path
 from typing import Any, Literal, overload
 
-import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from requests import ConnectionError, Response
-
-__all__: list[str] = [
-    "CURRENT_DIR_PATH",
-    "MAX_INDEX_NUM",
-    "MAX_NO_VALID_INDEX_NUM",
-    "RESULTS_DIR_PATH",
-    "OutBound",
-    "OutBounds",
-    "create_outbound",
-    "requests_flaresolverr",
-]
+from requests import ConnectionError, Response, Session
 
 # 定义常量
-MAX_INDEX_NUM = 50
-MAX_NO_VALID_INDEX_NUM = 3
+MAX_INDEX = 50
+MAX_NO_VALID_INDEX = 3
 
 # 定义路径
-CURRENT_DIR_PATH: Path = Path.cwd()
-RESULTS_DIR_PATH: Path = CURRENT_DIR_PATH / "results"
+CURRENT_DIR: Path = Path.cwd()
+RESULTS_DIR: Path = CURRENT_DIR / "results"
+OUTPUT_DIR: Path = CURRENT_DIR / "output"
 
 type OutBound = dict[str, Any]
 type OutBounds = list[OutBound]
@@ -63,8 +52,10 @@ def requests_flaresolverr(
     if method == "POST" and post_data:
         data["postData"] = post_data
 
+    session: Session = Session()
+
     try:
-        response: Response = requests.post(
+        response: Response = session.post(
             "http://localhost:8191/v1",
             json=data,
             headers={"Content-Type": "application/json"},
@@ -73,7 +64,7 @@ def requests_flaresolverr(
         response_json: Any = response.json()["solution"]
         response.status_code: int = response_json["status"]
     except ConnectionError:
-        response: Response = requests.post(  # 开发者环境可以不开flaresolverr
+        response: Response = session.post(  # 开发者环境可以不开flaresolverr
             url,
             timeout=120,
             data=post_data,
@@ -88,7 +79,7 @@ def requests_flaresolverr(
     try:
         tag: Tag | None = BeautifulSoup(data, "html.parser").find("pre")
         if "</pre>" in data and tag:
-            return json.loads(tag.get_text())
+            return loads(tag.get_text())
     except ValueError, TypeError:
         pass
     if not isinstance(data, data_type):
@@ -128,3 +119,16 @@ def create_outbound(
         result["username"] = username
         result["password"] = password
     return result
+
+
+__all__: list[str] = [
+    "CURRENT_DIR",
+    "MAX_INDEX",
+    "MAX_NO_VALID_INDEX",
+    "OUTPUT_DIR",
+    "RESULTS_DIR",
+    "OutBound",
+    "OutBounds",
+    "create_outbound",
+    "requests_flaresolverr",
+]
