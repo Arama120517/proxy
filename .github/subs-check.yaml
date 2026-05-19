@@ -34,7 +34,7 @@ alive-test-url: http://gstatic.com/generate_204
 # 如果找不到稳定的测速地址，可以自建测速地址
 speed-test-url: https://steamcdn-a.akamaihd.net/client/installer/SteamSetup.exe
 # 最低测速结果舍弃(KB/s)
-min-speed: 10240
+min-speed: 5120
 # 下载测试时间(s)(与下载链接大小相关，默认最大测试10s)
 download-timeout: 10
 # 单节点测速下载数据大小(MB)限制，0为不限
@@ -102,7 +102,7 @@ platforms:
 # 下次检测时会将历史节点加入待测队列重新检测，通过的节点才会保留到输出中
 # 过期的历史文件会自动清理
 # 0 = 关闭此功能
-keep-days: 2
+keep-days: 3
 
 # 输出目录
 # 如果为空，则为程序所在目录的config目录
