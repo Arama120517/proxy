@@ -5,9 +5,9 @@ print-progress: true
 concurrent: 1000
 # 测速并发数（默认等于concurrent）
 # 建议设置较低值，避免并发抢带宽导致测速不准
-speed-concurrent: 20
+speed-concurrent: 32
 # 流媒体检测并发数（默认等于concurrent）
-media-concurrent: 20
+media-concurrent: 32
 # 检查间隔(分钟)
 # 必须大于0，小于等于0会设置间隔1分钟
 check-interval: 114514
@@ -34,7 +34,7 @@ alive-test-url: http://gstatic.com/generate_204
 # 如果找不到稳定的测速地址，可以自建测速地址
 speed-test-url: https://steamcdn-a.akamaihd.net/client/installer/SteamSetup.exe
 # 最低测速结果舍弃(KB/s)
-min-speed: 5120
+min-speed: 10240
 # 下载测试时间(s)(与下载链接大小相关，默认最大测试10s)
 download-timeout: 10
 # 单节点测速下载数据大小(MB)限制，0为不限
@@ -121,7 +121,7 @@ api-key: ""
 # 例如: "/path/to/your/script.sh" 或 'C:\path\to\your\script.bat'
 # Linux请在脚本开头添加对应的：#!/bin/bash、#!/bin/sh、#!/usr/bin/env bash 等，编写标准的脚本
 # 注意如果使用docker，目前docker使用的alpine，只有sh，不支持bash
-callback-script: "/app/config/post.sh"
+callback-script: "./config/post.sh"
 
 # 填写搭建的apprise API server 地址
 # https://notify.xxxx.us.kg/notify
