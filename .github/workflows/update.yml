@@ -22,34 +22,32 @@ jobs:
         ports:
           - 25500:25500
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - name: Get github app token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: get_token
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.get_token.outputs.token }}
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
-          cache-python: true
 
-      - name: 初始化
-        id: init
-        run: |
-          echo "TITLE=$(date +'%Y年%m月%d日')" >> $GITHUB_OUTPUT
-          echo ${{ github.token }} | gh auth login --with-token
-          gh release delete --cleanup-tag --yes "results" || true
-
-          wget -q https://github.com/beck-8/subs-check/releases/latest/download/subs-check_Linux_x86_64.tar.gz -O ${{ github.workspace }}/subs-check.tar.gz
-          tar -xzf ${{ github.workspace }}/subs-check.tar.gz -C ${{ github.workspace }} subs-check
-          chmod +x ${{ github.workspace }}/subs-check
-
-          uv sync --no-dev
-
-      - name: 恢复历史节点
+      - name: Restore history
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ github.workspace }}/output/history
-          key: none # 这里需要让他恢复之前的缓存但是key必须定义
+          key: none
           restore-keys: |
             history-
 
-      - name: 获取节点
+      - name: Get subs for local
         env:
           JEGO_CLOUD_USERNAME: ${{ secrets.JEGO_CLOUD_USERNAME }}
           JEGO_CLOUD_PASSWORD: ${{ secrets.JEGO_CLOUD_PASSWORD }}
@@ -60,7 +58,7 @@ jobs:
           wait || true
           uv run --no-dev -m proxy.merge
 
-      - name: 更新节点
+      - name: Update
         run: |
           docker run --rm \
             --name subs-check \
@@ -69,21 +67,13 @@ jobs:
             ghcr.io/beck-8/subs-check:latest || true
           mv -f ${{ github.workspace }}/output/subs-check-results.json ${{ github.workspace }}/results.json
 
-      - name: 发布
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
-        with:
-          draft: false
-          prerelease: false
-          files: |
-            ${{ github.workspace }}/results.json
-          overwrite_files: true
-          name: ${{ steps.init.outputs.TITLE }}
-          tag_name: results
-          fail_on_unmatched_files: true
-          token: ${{ github.token }}
-          make_latest: true
+      - name: Release
+        run: |
+          echo ${{ steps.get_token.outputs.token }} | gh auth login --with-token
+          gh release delete --cleanup-tag --yes "results" || true  
+          gh release create "results" ${{ github.workspace }}/results.json --title "$(date +'%Y年%m月%d日')" --latest
 
-      - name: 保存历史节点
+      - name: Save history
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ github.workspace }}/output/history

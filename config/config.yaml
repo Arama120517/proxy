@@ -102,7 +102,7 @@ platforms:
 # 下次检测时会将历史节点加入待测队列重新检测，通过的节点才会保留到输出中
 # 过期的历史文件会自动清理
 # 0 = 关闭此功能
-keep-days: 2
+keep-days: 3
 
 # 输出目录
 # 如果为空，则为程序所在目录的config目录
@@ -399,7 +399,6 @@ sub-urls:
   - "https://raw.githubusercontent.com/snakem982/proxypool/main/source/v2ray-2.txt"
   - "https://raw.githubusercontent.com/ermaozi01/free_clash_vpn/main/subscribe/clash.yml"
   - "https://raw.githubusercontent.com/ermaozi01/free_clash_vpn/main/subscribe/v2ray.txt"
-  - "https://manager.farsonline24.ir"
   - "https://raw.githubusercontent.com/PuddinCat/BestClash/refs/heads/main/proxies.yaml"
   - "https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/http.txt"
   - "https://raw.githubusercontent.com/wiki/gfpcom/free-proxy-list/lists/https.txt"
