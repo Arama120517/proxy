@@ -61,11 +61,13 @@ jobs:
           uv run --no-dev -m proxy.merge
 
       - name: 更新节点
-        run: docker run --rm \
-          --name subs-check \
-          -v "${{ github.workspace }}/config":/app/config \
-          -v "${{ github.workspace }}/output":/app/output \
-          ghcr.io/beck-8/subs-check:latest || true
+        run: |
+          docker run --rm \
+            --name subs-check \
+            -v "${{ github.workspace }}/config":/app/config \
+            -v "${{ github.workspace }}/output":/app/output \
+            ghcr.io/beck-8/subs-check:latest || true
+          mv -f ${{ github.workspace }}/output/subs-check-results.json ${{ github.workspace }}/results.json
 
       - name: 发布
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3
@@ -73,7 +75,7 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ${{ github.workspace }}/output/subs-check-results.json
+            ${{ github.workspace }}/results.json
           overwrite_files: true
           name: ${{ steps.init.outputs.TITLE }}
           tag_name: results
