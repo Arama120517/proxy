@@ -1,3 +1,3 @@
-#!/bin/sh
-fetch -q -o /app/output/subs-check-results.json "http://127.0.0.1:8299/download/sub?target=sing-box"
-killall -9 subs-check
+#!/bin/bash
+wget -q http://127.0.0.1:8299/download/sub?target=sing-box -O results.json
+pkill -9 -f subs-check

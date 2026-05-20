@@ -60,12 +60,10 @@ jobs:
 
       - name: Update
         run: |
-          docker run --rm \
-            --name subs-check \
-            -v "${{ github.workspace }}/config":/app/config \
-            -v "${{ github.workspace }}/output":/app/output \
-            ghcr.io/beck-8/subs-check:latest || true
-          mv -f ${{ github.workspace }}/output/subs-check-results.json ${{ github.workspace }}/results.json
+          wget -q https://github.com/beck-8/subs-check/releases/latest/download/subs-check_Linux_x86_64.tar.gz -O ${{ github.workspace }}/subs-check.tar.gz
+          tar -xzf ${{ github.workspace }}/subs-check.tar.gz -C ${{ github.workspace }} subs-check
+          chmod +x ${{ github.workspace }}/subs-check
+          ${{ github.workspace }}/subs-check || true
 
       - name: Release
         run: |
